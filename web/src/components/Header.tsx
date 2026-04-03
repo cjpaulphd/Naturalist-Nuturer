@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/study", label: "Study" },
   { href: "/browse", label: "Browse" },
+  { href: "/progress", label: "Progress" },
 ];
 
 export default function Header() {
