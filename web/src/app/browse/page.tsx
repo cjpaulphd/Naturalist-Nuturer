@@ -128,7 +128,7 @@ function BrowseContent() {
       {/* Sort */}
       <div className="flex gap-2">
         {([
-          ["prevalence", "By Prevalence"],
+          ["prevalence", "By iNat Popularity"],
           ["alphabetical", "A\u2013Z"],
           ["family", "By Family"],
         ] as [SortMode, string][]).map(([mode, label]) => (
