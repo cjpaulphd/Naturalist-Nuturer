@@ -16,7 +16,7 @@ export default function ProgressDashboard({ species }: ProgressDashboardProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-4">
       <h2 className="text-sm font-semibold text-stone-700 mb-3">
-        Your Progress
+        Neighbors You Know
       </h2>
 
       <div className="grid grid-cols-4 gap-3 mb-4">
