@@ -4,9 +4,10 @@
 
 import { Species, Season, Category, SpeciesPhoto, SpeciesSound } from "./types";
 import { getStorage, setStorage } from "./storage";
+import { CATEGORY_ORDER, ICONIC_TAXA_CONFIGS } from "./categories";
 
 const INAT_API = "https://api.inaturalist.org/v1";
-const CACHE_KEY = "nn_location_species";
+const CACHE_KEY = "nn_location_species_v2";
 const CACHE_LOCATION_KEY = "nn_last_location";
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -154,6 +155,35 @@ function classifyPlant(
   }
 
   return "plant";
+}
+
+/**
+ * Map an iconic taxa name to a Category.
+ * For Plantae, uses classifyPlant to distinguish trees from plants.
+ */
+function mapIconicTaxaToCategory(
+  iconicTaxa: string,
+  familyName: string,
+  commonName: string
+): Category {
+  switch (iconicTaxa) {
+    case "Plantae":
+      return classifyPlant(familyName, commonName);
+    case "Aves":
+      return "bird";
+    case "Fungi":
+      return "fungus";
+    case "Insecta":
+      return "insect";
+    case "Mammalia":
+      return "mammal";
+    case "Reptilia":
+      return "reptile";
+    case "Amphibia":
+      return "amphibian";
+    default:
+      return "plant";
+  }
 }
 
 /**
@@ -404,7 +434,7 @@ function parseXenoCantoDuration(length: string): number | null {
  */
 function convertToSpecies(
   results: { count: number; taxon: Record<string, unknown> }[],
-  defaultCategory: Category,
+  iconicTaxa: string,
   taxonomyMap: Map<number, { order: string; family: string; genus: string; native: boolean }>,
   seasonMap: Map<number, Season[]>,
   soundMap: Map<number, SpeciesSound[]> = new Map()
@@ -429,10 +459,7 @@ function convertToSpecies(
     const genus = taxonomy?.genus || scientificName.split(" ")[0] || "";
     const isNative = taxonomy?.native ?? true;
 
-    const category =
-      defaultCategory === "bird"
-        ? "bird"
-        : classifyPlant(family, commonName);
+    const category = mapIconicTaxaToCategory(iconicTaxa, family, commonName);
 
     const photoUrl = getPhotoUrl(taxon.default_photo || null);
     const photos: SpeciesPhoto[] = photoUrl
@@ -501,40 +528,58 @@ export async function fetchSpeciesForLocation(
     }
   }
 
-  // Fetch species counts in parallel
-  const [plantaeResults, avesResults, locationName] = await Promise.all([
-    fetchSpeciesCounts(coords, "Plantae", 100),
-    fetchSpeciesCounts(coords, "Aves", 100),
+  // Fetch species counts for all taxa groups in parallel
+  const taxaFetches = ICONIC_TAXA_CONFIGS.map((cfg) =>
+    fetchSpeciesCounts(coords, cfg.iconicTaxa, cfg.perPage).then((results) => ({
+      iconicTaxa: cfg.iconicTaxa,
+      results,
+    }))
+  );
+
+  const [locationName, ...taxaResults] = await Promise.all([
     reverseGeocode(coords),
+    ...taxaFetches,
   ]);
 
   // Collect all taxon IDs for batch taxonomy fetch
-  const allResults = [...plantaeResults, ...avesResults];
+  const allResults = taxaResults.flatMap((t) => t.results);
   const taxonIds = allResults
     .map((r) => (r.taxon as { id?: number }).id)
     .filter((id): id is number => id !== undefined);
 
   // Collect bird scientific names for sound fetching
-  const birdNames = avesResults
+  const avesGroup = taxaResults.find((t) => t.iconicTaxa === "Aves");
+  const birdNames = (avesGroup?.results || [])
     .map((r) => {
       const t = r.taxon as { id?: number; name?: string };
       return { id: t.id || 0, scientificName: t.name || "" };
     })
     .filter((b) => b.id && b.scientificName);
 
+  // Select top ~7 species per taxa group for seasonal histograms (cap ~50 total)
+  const histogramBudget = 50;
+  const perGroupBudget = Math.max(5, Math.floor(histogramBudget / taxaResults.length));
+  const histogramIds = taxaResults.flatMap((t) =>
+    t.results
+      .slice(0, perGroupBudget)
+      .map((r) => (r.taxon as { id?: number }).id)
+      .filter((id): id is number => id !== undefined)
+  );
+
   // Fetch taxonomy details, seasonal data, and bird sounds in parallel
   const [taxonomyMap, seasonMap, soundMap] = await Promise.all([
     fetchTaxonDetails(taxonIds),
-    fetchSeasonalData(coords, taxonIds.slice(0, 50)),
+    fetchSeasonalData(coords, histogramIds),
     fetchBirdSounds(birdNames),
   ]);
 
-  // Convert to Species format with real taxonomy, season, and sound data
-  const plantSpecies = convertToSpecies(plantaeResults, "plant", taxonomyMap, seasonMap);
-  const birdSpecies = convertToSpecies(avesResults, "bird", taxonomyMap, seasonMap, soundMap);
-
-  // Assign prevalence ranks within each category
-  const allSpecies = [...plantSpecies, ...birdSpecies];
+  // Convert each taxa group to Species format
+  const allSpecies: Species[] = [];
+  for (const group of taxaResults) {
+    const sounds = group.iconicTaxa === "Aves" ? soundMap : new Map<number, SpeciesSound[]>();
+    const species = convertToSpecies(group.results, group.iconicTaxa, taxonomyMap, seasonMap, sounds);
+    allSpecies.push(...species);
+  }
 
   const byCategory: Record<string, Species[]> = {};
   for (const sp of allSpecies) {
@@ -551,8 +596,7 @@ export async function fetchSpeciesForLocation(
 
   // Sort final list: by category then prevalence
   allSpecies.sort((a, b) => {
-    const catOrder = { tree: 0, plant: 1, bird: 2 };
-    const catDiff = catOrder[a.category] - catOrder[b.category];
+    const catDiff = CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category];
     if (catDiff !== 0) return catDiff;
     return a.prevalenceRank - b.prevalenceRank;
   });

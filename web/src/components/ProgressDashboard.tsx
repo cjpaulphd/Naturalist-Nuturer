@@ -1,17 +1,12 @@
 "use client";
 
-import { Species, Category } from "@/lib/types";
+import { Species } from "@/lib/types";
+import { CATEGORIES } from "@/lib/categories";
 import { getLearnedCount, getDueCards, getUserProgress } from "@/lib/srs";
 
 interface ProgressDashboardProps {
   species: Species[];
 }
-
-const CATEGORIES: { value: Category; label: string; icon: string }[] = [
-  { value: "tree", label: "Trees", icon: "🌲" },
-  { value: "plant", label: "Plants", icon: "🌸" },
-  { value: "bird", label: "Birds", icon: "🐦" },
-];
 
 export default function ProgressDashboard({ species }: ProgressDashboardProps) {
   const progress = getUserProgress();
@@ -23,7 +18,7 @@ export default function ProgressDashboard({ species }: ProgressDashboardProps) {
         Your Progress
       </h2>
 
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-4 gap-3 mb-4">
         {CATEGORIES.map((cat) => {
           const total = species.filter((s) => s.category === cat.value).length;
           const learned = getLearnedCount(species, cat.value);

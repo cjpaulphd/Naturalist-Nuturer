@@ -13,7 +13,7 @@ export interface SpeciesSound {
   duration: number | null;
 }
 
-export type Category = "tree" | "plant" | "bird";
+export type Category = "tree" | "plant" | "fungus" | "bird" | "mammal" | "insect" | "reptile" | "amphibian";
 
 export type Season = "spring" | "summer" | "fall" | "winter";
 

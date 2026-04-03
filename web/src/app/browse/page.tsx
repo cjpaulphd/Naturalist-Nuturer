@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Species, Category } from "@/lib/types";
+import { CATEGORY_ICONS } from "@/lib/categories";
 import {
   loadSpeciesData,
   searchSpecies,
@@ -155,12 +156,7 @@ function SpeciesListItem({
       : photo.url
     : null;
 
-  const categoryIcon =
-    species.category === "tree"
-      ? "🌲"
-      : species.category === "plant"
-      ? "🌸"
-      : "🐦";
+  const categoryIcon = CATEGORY_ICONS[species.category] || "🌿";
 
   return (
     <button
@@ -194,7 +190,7 @@ function SpeciesListItem({
         <div className="flex gap-2 mt-0.5">
           <span className="text-[10px] text-stone-400">{species.family}</span>
           <span className="text-[10px] text-stone-400">
-            #{species.prevalenceRank}
+            #{species.prevalenceRank} &middot; {species.observationCount.toLocaleString()} obs
           </span>
         </div>
       </div>

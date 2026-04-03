@@ -637,11 +637,7 @@ function StudyContent() {
 
                 <div className="flex gap-2 flex-wrap justify-center">
                   <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-medium">
-                    {currentSpecies.category === "tree"
-                      ? "Tree"
-                      : currentSpecies.category === "plant"
-                      ? "Plant"
-                      : "Bird"}
+                    {currentSpecies.category.charAt(0).toUpperCase() + currentSpecies.category.slice(1)}
                   </span>
                   {currentSpecies.family && currentSpecies.family !== "Unknown" && (
                     <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs">
