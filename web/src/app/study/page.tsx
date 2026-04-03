@@ -407,7 +407,6 @@ function StudyContent() {
                   <PhotoGallery
                     speciesId={currentSpecies.id}
                     photos={currentSpecies.photos}
-                    showAttribution={false}
                   />
                   <div className="p-4 text-center">
                     <p className="text-lg font-semibold text-stone-700">
