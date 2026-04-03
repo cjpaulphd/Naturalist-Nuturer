@@ -7,8 +7,24 @@ import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 export const metadata: Metadata = {
   title: "Naturalist Nurturer",
   description:
-    "Learn species identification at Green River Preserve with flashcards",
+    "Know Your Neighbors. Learn the species where you are with flashcards and quizzes powered by iNaturalist.",
   manifest: "/manifest.json",
+  metadataBase: new URL("https://www.natnurturer.org"),
+  openGraph: {
+    title: "Naturalist Nurturer",
+    description:
+      "Know Your Neighbors. Learn the species where you are with flashcards and quizzes powered by iNaturalist.",
+    url: "https://www.natnurturer.org",
+    siteName: "Naturalist Nurturer",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Naturalist Nurturer",
+    description:
+      "Know Your Neighbors. Learn the species where you are with flashcards and quizzes powered by iNaturalist.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
