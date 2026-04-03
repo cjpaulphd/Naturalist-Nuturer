@@ -1,17 +1,12 @@
 "use client";
 
 import { Category } from "@/lib/types";
+import { CATEGORIES } from "@/lib/categories";
 
 interface CategorySelectorProps {
   selected: Category[];
   onChange: (categories: Category[]) => void;
 }
-
-const CATEGORIES: { value: Category; label: string; icon: string }[] = [
-  { value: "tree", label: "Trees", icon: "🌲" },
-  { value: "plant", label: "Plants", icon: "🌸" },
-  { value: "bird", label: "Birds", icon: "🐦" },
-];
 
 export default function CategorySelector({
   selected,
@@ -30,10 +25,10 @@ export default function CategorySelector({
   const selectAll = () => onChange([]);
 
   return (
-    <div className="flex gap-2 flex-wrap justify-center">
+    <div className="flex gap-2 flex-nowrap overflow-x-auto pb-1 justify-start">
       <button
         onClick={selectAll}
-        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
           isAll
             ? "bg-green-700 text-white"
             : "bg-stone-200 text-stone-600 hover:bg-stone-300"
@@ -45,7 +40,7 @@ export default function CategorySelector({
         <button
           key={cat.value}
           onClick={() => toggleCategory(cat.value)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
             selected.includes(cat.value)
               ? "bg-green-700 text-white"
               : "bg-stone-200 text-stone-600 hover:bg-stone-300"

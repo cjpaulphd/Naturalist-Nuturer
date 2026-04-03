@@ -11,12 +11,6 @@ interface SpeciesDetailProps {
   onClose?: () => void;
 }
 
-const CATEGORY_LABELS = {
-  tree: "Tree",
-  plant: "Plant",
-  bird: "Bird",
-};
-
 export default function SpeciesDetail({ species, allSpecies = [], onClose }: SpeciesDetailProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden max-w-lg mx-auto">
@@ -45,7 +39,7 @@ export default function SpeciesDetail({ species, allSpecies = [], onClose }: Spe
 
         <div className="flex gap-2 flex-wrap justify-center">
           <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-medium">
-            {CATEGORY_LABELS[species.category]}
+            {species.category.charAt(0).toUpperCase() + species.category.slice(1)}
           </span>
           {species.family && species.family !== "Unknown" && (
             <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs">
@@ -62,7 +56,10 @@ export default function SpeciesDetail({ species, allSpecies = [], onClose }: Spe
             </span>
           )}
           <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
-            #{species.prevalenceRank} in area
+            #{species.prevalenceRank} most common {species.category} nearby
+          </span>
+          <span className="px-2 py-0.5 bg-stone-50 text-stone-500 rounded text-xs">
+            {species.observationCount.toLocaleString()} observations
           </span>
         </div>
 
@@ -129,9 +126,6 @@ export default function SpeciesDetail({ species, allSpecies = [], onClose }: Spe
           </div>
         )}
 
-        <p className="text-[10px] text-stone-400 pt-2">
-          {species.observationCount} observations in this area
-        </p>
       </div>
     </div>
   );
