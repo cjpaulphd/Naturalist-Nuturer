@@ -2,7 +2,7 @@
  * iNaturalist API client for browser-side species lookup by location.
  */
 
-import { Species, Category, SpeciesPhoto } from "./types";
+import { Species, Season, Category, SpeciesPhoto } from "./types";
 import { getStorage, setStorage } from "./storage";
 
 const INAT_API = "https://api.inaturalist.org/v1";
@@ -35,6 +35,13 @@ const TREE_NAME_KEYWORDS = [
   "buckeye", "chestnut", "persimmon", "serviceberry", "silverbell",
   "pawpaw", "catalpa", "hackberry", "hornbeam", "linden",
 ];
+
+// Map months to seasons
+const MONTH_TO_SEASON: Record<number, Season> = {
+  1: "winter", 2: "winter", 3: "spring", 4: "spring", 5: "spring",
+  6: "summer", 7: "summer", 8: "summer", 9: "fall", 10: "fall",
+  11: "fall", 12: "winter",
+};
 
 export interface LocationCoords {
   lat: number;
@@ -98,9 +105,8 @@ async function reverseGeocode(coords: LocationCoords): Promise<string> {
     const data = await res.json();
     const standard = data.results?.standard;
     if (standard && standard.length > 0) {
-      // Prefer county or state-level place
-      const place = standard.find((p: { place_type: number }) => p.place_type === 9) // county
-        || standard.find((p: { place_type: number }) => p.place_type === 8) // state
+      const place = standard.find((p: { place_type: number }) => p.place_type === 9)
+        || standard.find((p: { place_type: number }) => p.place_type === 8)
         || standard[0];
       return place.display_name || place.name || `${coords.lat.toFixed(2)}, ${coords.lng.toFixed(2)}`;
     }
@@ -114,7 +120,7 @@ async function reverseGeocode(coords: LocationCoords): Promise<string> {
  * Build a bounding box (~10 miles) around coordinates.
  */
 function buildBBox(coords: LocationCoords) {
-  const delta = 0.15; // ~10 miles
+  const delta = 0.15;
   return {
     swlat: coords.lat - delta,
     swlng: coords.lng - delta,
@@ -124,52 +130,30 @@ function buildBBox(coords: LocationCoords) {
 }
 
 /**
- * Classify a Plantae taxon as tree or plant.
+ * Classify a Plantae taxon as tree or plant using family and name.
  */
-function classifyPlant(taxon: {
-  preferred_common_name?: string;
-  name?: string;
-  ancestors?: { rank?: string; name?: string }[];
-}): Category {
-  // Check family from ancestors
-  const ancestors = taxon.ancestors || [];
-  for (const ancestor of ancestors) {
-    if (ancestor.rank === "family" && ancestor.name && TREE_FAMILIES.has(ancestor.name)) {
-      // For families with many non-trees, check common name
-      const ambiguousFamilies = new Set(["Rosaceae", "Fabaceae", "Ericaceae", "Salicaceae", "Adoxaceae"]);
-      if (ambiguousFamilies.has(ancestor.name)) {
-        const commonName = (taxon.preferred_common_name || "").toLowerCase();
-        if (TREE_NAME_KEYWORDS.some((kw) => commonName.includes(kw))) {
-          return "tree";
-        }
-        return "plant";
+function classifyPlant(
+  familyName: string,
+  commonName: string
+): Category {
+  if (familyName && TREE_FAMILIES.has(familyName)) {
+    const ambiguousFamilies = new Set(["Rosaceae", "Fabaceae", "Ericaceae", "Salicaceae", "Adoxaceae"]);
+    if (ambiguousFamilies.has(familyName)) {
+      const cn = commonName.toLowerCase();
+      if (TREE_NAME_KEYWORDS.some((kw) => cn.includes(kw))) {
+        return "tree";
       }
-      return "tree";
+      return "plant";
     }
+    return "tree";
   }
 
-  // Fallback: check common name
-  const commonName = (taxon.preferred_common_name || "").toLowerCase();
-  if (TREE_NAME_KEYWORDS.some((kw) => commonName.includes(kw))) {
+  const cn = commonName.toLowerCase();
+  if (TREE_NAME_KEYWORDS.some((kw) => cn.includes(kw))) {
     return "tree";
   }
 
   return "plant";
-}
-
-/**
- * Extract family name from taxon ancestors.
- */
-function extractFamily(taxon: {
-  ancestors?: { rank?: string; name?: string }[];
-}): string {
-  const ancestors = taxon.ancestors || [];
-  for (const ancestor of ancestors) {
-    if (ancestor.rank === "family") {
-      return ancestor.name || "Unknown";
-    }
-  }
-  return "Unknown";
 }
 
 /**
@@ -222,11 +206,151 @@ async function fetchSpeciesCounts(
 }
 
 /**
+ * Batch-fetch full taxon details including ancestors from /taxa endpoint.
+ * The taxa endpoint returns ancestor data (order, family, genus).
+ */
+async function fetchTaxonDetails(
+  taxonIds: number[]
+): Promise<Map<number, { order: string; family: string; genus: string; native: boolean }>> {
+  const result = new Map<number, { order: string; family: string; genus: string; native: boolean }>();
+  if (taxonIds.length === 0) return result;
+
+  // Batch in groups of 30 (API limit)
+  const batchSize = 30;
+  for (let i = 0; i < taxonIds.length; i += batchSize) {
+    const batch = taxonIds.slice(i, i + batchSize);
+    try {
+      const res = await fetch(
+        `${INAT_API}/taxa/${batch.join(",")}`,
+        { headers: { "User-Agent": "NaturalistNurturer/1.0" } }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const taxon of data.results || []) {
+        let order = "";
+        let family = "";
+        let genus = "";
+        const native = taxon.native !== false; // default to true if not specified
+
+        // Extract from ancestors array
+        const ancestors = (taxon.ancestors || []) as { rank?: string; name?: string }[];
+        for (const anc of ancestors) {
+          if (anc.rank === "order") order = anc.name || "";
+          if (anc.rank === "family") family = anc.name || "";
+          if (anc.rank === "genus") genus = anc.name || "";
+        }
+
+        // Genus fallback: parse from scientific name
+        if (!genus && taxon.name) {
+          genus = taxon.name.split(" ")[0] || "";
+        }
+
+        result.set(taxon.id, { order, family, genus, native });
+      }
+    } catch {
+      // Continue with what we have
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Fetch observation histogram to determine seasonal presence.
+ * Returns the seasons where a species has significant observations in the area.
+ */
+async function fetchSeasonalData(
+  coords: LocationCoords,
+  taxonIds: number[]
+): Promise<Map<number, Season[]>> {
+  const result = new Map<number, Season[]>();
+  const bbox = buildBBox(coords);
+
+  // Batch in groups of 10 to avoid too many parallel requests
+  const batchSize = 10;
+  const promises: Promise<void>[] = [];
+
+  for (let i = 0; i < taxonIds.length; i += batchSize) {
+    const batch = taxonIds.slice(i, i + batchSize);
+    // Fetch histogram for each taxon in this batch
+    for (const taxonId of batch) {
+      const p = (async () => {
+        try {
+          const params = new URLSearchParams({
+            taxon_id: taxonId.toString(),
+            swlat: bbox.swlat.toString(),
+            swlng: bbox.swlng.toString(),
+            nelat: bbox.nelat.toString(),
+            nelng: bbox.nelng.toString(),
+            quality_grade: "research",
+            interval: "month_of_year",
+          });
+          const res = await fetch(
+            `${INAT_API}/observations/histogram?${params}`,
+            { headers: { "User-Agent": "NaturalistNurturer/1.0" } }
+          );
+          if (!res.ok) return;
+          const data = await res.json();
+          const monthData = data.results?.month_of_year;
+          if (!monthData) return;
+
+          // Determine which seasons have significant observations
+          // Sum observations by season
+          const seasonCounts: Record<Season, number> = {
+            spring: 0, summer: 0, fall: 0, winter: 0,
+          };
+          for (const [month, count] of Object.entries(monthData)) {
+            const m = parseInt(month);
+            const season = MONTH_TO_SEASON[m];
+            if (season) seasonCounts[season] += count as number;
+          }
+
+          // Total observations
+          const total = Object.values(seasonCounts).reduce((a, b) => a + b, 0);
+          if (total === 0) return;
+
+          // A season is "active" if it has at least 10% of total observations
+          const threshold = total * 0.1;
+          const seasons: Season[] = [];
+          for (const [season, count] of Object.entries(seasonCounts)) {
+            if (count >= threshold) {
+              seasons.push(season as Season);
+            }
+          }
+
+          if (seasons.length > 0) {
+            result.set(taxonId, seasons);
+          }
+        } catch {
+          // Skip this taxon
+        }
+      })();
+      promises.push(p);
+    }
+
+    // Wait for batch before starting next to be respectful of rate limits
+    if (promises.length >= batchSize) {
+      await Promise.all(promises);
+      promises.length = 0;
+    }
+  }
+
+  // Wait for remaining
+  if (promises.length > 0) {
+    await Promise.all(promises);
+  }
+
+  return result;
+}
+
+/**
  * Convert iNaturalist API results to our Species format.
  */
 function convertToSpecies(
   results: { count: number; taxon: Record<string, unknown> }[],
-  defaultCategory: Category
+  defaultCategory: Category,
+  taxonomyMap: Map<number, { order: string; family: string; genus: string; native: boolean }>,
+  seasonMap: Map<number, Season[]>
 ): Species[] {
   return results.map((item, index) => {
     const taxon = item.taxon as {
@@ -234,15 +358,24 @@ function convertToSpecies(
       name?: string;
       preferred_common_name?: string;
       default_photo?: { medium_url?: string; url?: string; attribution?: string };
-      ancestors?: { rank?: string; name?: string }[];
       wikipedia_summary?: string;
       iconic_taxon_name?: string;
     };
 
+    const taxonId = taxon.id || index;
+    const taxonomy = taxonomyMap.get(taxonId);
+    const scientificName = taxon.name || "";
+    const commonName = taxon.preferred_common_name || scientificName || "Unknown";
+
+    const family = taxonomy?.family || "";
+    const order = taxonomy?.order || "";
+    const genus = taxonomy?.genus || scientificName.split(" ")[0] || "";
+    const isNative = taxonomy?.native ?? true;
+
     const category =
       defaultCategory === "bird"
         ? "bird"
-        : classifyPlant(taxon);
+        : classifyPlant(family, commonName);
 
     const photoUrl = getPhotoUrl(taxon.default_photo || null);
     const photos: SpeciesPhoto[] = photoUrl
@@ -268,25 +401,21 @@ function convertToSpecies(
       }
     }
 
-    // Extract order and genus from ancestors if available
-    const ancestors = (taxon.ancestors || []) as { rank?: string; name?: string }[];
-    const orderAncestor = ancestors.find((a) => a.rank === "order");
-    const genusAncestor = ancestors.find((a) => a.rank === "genus");
-    const scientificName = taxon.name || "";
-    const genus = genusAncestor?.name || scientificName.split(" ")[0] || "";
+    // Get seasonal data, default to all seasons if not available
+    const seasons = seasonMap.get(taxonId) || ["spring", "summer", "fall", "winter"];
 
     return {
-      id: taxon.id || index,
+      id: taxonId,
       category,
-      commonName: taxon.preferred_common_name || scientificName || "Unknown",
+      commonName,
       scientificName,
-      order: orderAncestor?.name || "",
-      family: extractFamily(taxon),
+      order,
+      family,
       genus,
       observationCount: item.count,
-      prevalenceRank: 0, // assigned after sorting
-      nativeStatus: "unknown",
-      seasons: ["spring", "summer", "fall", "winter"], // default to all seasons for live data
+      prevalenceRank: 0,
+      nativeStatus: isNative ? "native" : "introduced",
+      seasons,
       photos,
       sounds: [],
       keyFacts,
@@ -315,16 +444,28 @@ export async function fetchSpeciesForLocation(
     }
   }
 
-  // Fetch in parallel
+  // Fetch species counts in parallel
   const [plantaeResults, avesResults, locationName] = await Promise.all([
     fetchSpeciesCounts(coords, "Plantae", 100),
     fetchSpeciesCounts(coords, "Aves", 100),
     reverseGeocode(coords),
   ]);
 
-  // Convert to Species format
-  const plantSpecies = convertToSpecies(plantaeResults, "plant");
-  const birdSpecies = convertToSpecies(avesResults, "bird");
+  // Collect all taxon IDs for batch taxonomy fetch
+  const allResults = [...plantaeResults, ...avesResults];
+  const taxonIds = allResults
+    .map((r) => (r.taxon as { id?: number }).id)
+    .filter((id): id is number => id !== undefined);
+
+  // Fetch taxonomy details and seasonal data in parallel
+  const [taxonomyMap, seasonMap] = await Promise.all([
+    fetchTaxonDetails(taxonIds),
+    fetchSeasonalData(coords, taxonIds.slice(0, 50)), // Limit seasonal fetches to top 50 for speed
+  ]);
+
+  // Convert to Species format with real taxonomy and season data
+  const plantSpecies = convertToSpecies(plantaeResults, "plant", taxonomyMap, seasonMap);
+  const birdSpecies = convertToSpecies(avesResults, "bird", taxonomyMap, seasonMap);
 
   // Assign prevalence ranks within each category
   const allSpecies = [...plantSpecies, ...birdSpecies];
@@ -358,7 +499,6 @@ export async function fetchSpeciesForLocation(
     timestamp: Date.now(),
   });
 
-  // Also save as the stored location
   setStorage(CACHE_LOCATION_KEY, coordsWithName);
 
   return { species: allSpecies, locationName };

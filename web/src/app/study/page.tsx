@@ -626,10 +626,21 @@ function StudyContent() {
                       ? "Plant"
                       : "Bird"}
                   </span>
-                  <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs">
-                    {currentSpecies.family}
-                  </span>
-                  {currentSpecies.seasons && currentSpecies.seasons.length > 0 && (
+                  {currentSpecies.family && currentSpecies.family !== "Unknown" && (
+                    <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs">
+                      {currentSpecies.family}
+                    </span>
+                  )}
+                  {currentSpecies.nativeStatus && currentSpecies.nativeStatus !== "unknown" && (
+                    <span className={`px-2 py-0.5 rounded text-xs ${
+                      currentSpecies.nativeStatus === "native" || currentSpecies.nativeStatus === "likely native"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-orange-50 text-orange-700"
+                    }`}>
+                      {currentSpecies.nativeStatus}
+                    </span>
+                  )}
+                  {currentSpecies.seasons && currentSpecies.seasons.length > 0 && currentSpecies.seasons.length < 4 && (
                     <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs capitalize">
                       {currentSpecies.seasons.join(", ")}
                     </span>

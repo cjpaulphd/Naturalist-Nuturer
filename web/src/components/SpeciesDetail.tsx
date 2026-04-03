@@ -43,15 +43,21 @@ export default function SpeciesDetail({ species, allSpecies = [], onClose }: Spe
           )}
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap justify-center">
           <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-medium">
             {CATEGORY_LABELS[species.category]}
           </span>
-          <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs">
-            {species.family}
-          </span>
-          {species.nativeStatus !== "unknown" && (
-            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs">
+          {species.family && species.family !== "Unknown" && (
+            <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs">
+              {species.family}
+            </span>
+          )}
+          {species.nativeStatus && species.nativeStatus !== "unknown" && (
+            <span className={`px-2 py-0.5 rounded text-xs ${
+              species.nativeStatus === "native" || species.nativeStatus === "likely native"
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-orange-50 text-orange-700"
+            }`}>
               {species.nativeStatus}
             </span>
           )}
@@ -61,9 +67,7 @@ export default function SpeciesDetail({ species, allSpecies = [], onClose }: Spe
         </div>
 
         {/* Taxonomy */}
-        {species.order && (
-          <TaxonomyChart species={species} allSpecies={allSpecies} />
-        )}
+        <TaxonomyChart species={species} allSpecies={allSpecies} />
 
         {/* Seasons */}
         {species.seasons && species.seasons.length > 0 && (
