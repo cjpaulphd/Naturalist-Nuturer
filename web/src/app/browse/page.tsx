@@ -90,14 +90,6 @@ function BrowseContent() {
     }
   }, [allSpecies, categories, searchQuery, sortMode]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   // Swipe state for species detail navigation
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchDeltaX, setTouchDeltaX] = useState(0);
@@ -139,6 +131,14 @@ function BrowseContent() {
   }, [touchStartX, touchDeltaX, goToNextSpecies]);
 
   const hasNextSpecies = selectedIndex >= 0 && selectedIndex < filteredSpecies.length - 1;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // Species detail view
   if (selectedSpecies) {
