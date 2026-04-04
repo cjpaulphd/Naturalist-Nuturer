@@ -541,6 +541,7 @@ export async function fetchSpeciesForLocation(
   }
 
   // Fetch species counts for all taxa groups in parallel
+  // Use Promise.allSettled so one failing group doesn't block others
   const taxaFetches = ICONIC_TAXA_CONFIGS.map((cfg) =>
     fetchSpeciesCounts(coords, cfg.iconicTaxa, cfg.perPage).then((results) => ({
       iconicTaxa: cfg.iconicTaxa,
@@ -548,10 +549,16 @@ export async function fetchSpeciesForLocation(
     }))
   );
 
-  const [locationName, ...taxaResults] = await Promise.all([
+  const [locationNameResult, ...taxaSettled] = await Promise.all([
     reverseGeocode(coords),
-    ...taxaFetches,
+    ...taxaFetches.map((p) =>
+      p.catch(() => null)
+    ),
   ]);
+
+  const locationName = locationNameResult as string;
+  const taxaResults = (taxaSettled as (({ iconicTaxa: string; results: { count: number; taxon: Record<string, unknown> }[] }) | null)[])
+    .filter((r): r is { iconicTaxa: string; results: { count: number; taxon: Record<string, unknown> }[] } => r !== null);
 
   // Collect all taxon IDs for batch taxonomy fetch
   const allResults = taxaResults.flatMap((t) => t.results);

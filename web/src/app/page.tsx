@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Species, Category, SessionType, StudyMode, QuizMode, NameDisplay } from "@/lib/types";
 import { loadSpeciesData } from "@/lib/species";
 import { getCachedLocationSpecies } from "@/lib/inat";
-import { getNewCards } from "@/lib/srs";
+import { getNewCards, getDueCards, getAllLearnedCards } from "@/lib/srs";
+import { CATEGORIES } from "@/lib/categories";
 import CategorySelector from "@/components/CategorySelector";
 import LocationPicker from "@/components/LocationPicker";
 import QuizSettingsModal from "@/components/QuizSettingsModal";
@@ -53,17 +54,46 @@ export default function HomePage() {
     setLocationName(name);
   };
 
-  const newAvailable =
-    species.length > 0 ? getNewCards(species, categories, 1).length > 0 : false;
+  const hasNew = species.length > 0 && getNewCards(species, categories, 1).length > 0;
+  const hasDue = species.length > 0 && getDueCards(species, categories).length > 0;
+  const hasLearned = species.length > 0 && getAllLearnedCards(species, categories).length > 0;
+  const hasAnyForCategory = species.length > 0 && species.some(
+    (s) => categories.length === 0 || categories.includes(s.category)
+  );
+
+  // Determine what the Learn button will do
+  type LearnAction = "learn" | "review" | "review-all" | "empty";
+  const learnAction: LearnAction = hasNew ? "learn" : hasDue ? "review" : hasLearned ? "review-all" : "empty";
+
+  // Compute per-category new (unlearned) species counts
+  const newCountsByCategory = useMemo(() => {
+    if (species.length === 0) return undefined;
+    const counts = {} as Record<Category, number>;
+    for (const cat of CATEGORIES) {
+      counts[cat.value] = getNewCards(species, [cat.value], Infinity).length;
+    }
+    return counts;
+  }, [species]);
 
   const hasBirds = species.some((s) => s.category === "bird");
 
   const startLearn = () => {
     const params = new URLSearchParams();
-    params.set("type", "learn");
+    if (hasNew) {
+      params.set("type", "learn");
+    } else if (hasDue) {
+      params.set("type", "review");
+    } else if (hasLearned) {
+      params.set("type", "review-all");
+    } else {
+      return; // truly nothing — button should be disabled
+    }
     params.set("mode", "photo");
     if (categories.length > 0) {
       params.set("categories", categories.join(","));
+    }
+    if (!hasNew) {
+      params.set("fallback", "true");
     }
     router.push(`/study?${params.toString()}`);
   };
@@ -128,19 +158,38 @@ export default function HomePage() {
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={startLearn}
-            disabled={!newAvailable}
-            className="p-3 bg-green-700 text-white rounded-xl text-center hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={learnAction === "empty"}
+            className={`p-3 text-white rounded-xl text-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              learnAction === "learn"
+                ? "bg-green-700 hover:bg-green-800"
+                : "bg-amber-600 hover:bg-amber-700"
+            }`}
           >
-            <div className="font-semibold text-sm">Learn</div>
+            <div className="font-semibold text-sm">
+              {learnAction === "learn" ? "Learn" : learnAction === "review" ? "Review Due" : learnAction === "review-all" ? "Review" : "Learn"}
+            </div>
+            {learnAction !== "learn" && learnAction !== "empty" && (
+              <div className="text-[10px] opacity-80 mt-0.5">All new species learned!</div>
+            )}
           </button>
 
           <button
             onClick={() => setShowQuizSettings(true)}
-            className="p-3 bg-blue-600 text-white rounded-xl text-center hover:bg-blue-700 transition-colors"
+            disabled={!hasAnyForCategory}
+            className="p-3 bg-blue-600 text-white rounded-xl text-center hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="font-semibold text-sm">Challenge</div>
           </button>
         </div>
+      )}
+
+      {/* Empty category hint */}
+      {species.length > 0 && learnAction === "empty" && (
+        <p className="text-xs text-stone-400 text-center -mt-3">
+          {categories.length > 0
+            ? "No species found for these categories at this location. Try selecting others or tap All."
+            : "No species loaded. Search for a location above."}
+        </p>
       )}
 
       {/* Location Picker */}
@@ -182,7 +231,11 @@ export default function HomePage() {
             <h3 className="text-sm font-semibold text-stone-600 mb-2">
               Categories
             </h3>
-            <CategorySelector selected={categories} onChange={setCategories} />
+            <CategorySelector
+              selected={categories}
+              onChange={setCategories}
+              newCounts={newCountsByCategory}
+            />
           </div>
         </>
       ) : null}
