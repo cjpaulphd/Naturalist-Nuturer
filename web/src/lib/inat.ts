@@ -37,12 +37,6 @@ const TREE_NAME_KEYWORDS = [
   "pawpaw", "catalpa", "hackberry", "hornbeam", "linden",
 ];
 
-// Map months to seasons
-const MONTH_TO_SEASON: Record<number, Season> = {
-  1: "winter", 2: "winter", 3: "spring", 4: "spring", 5: "spring",
-  6: "summer", 7: "summer", 8: "summer", 9: "fall", 10: "fall",
-  11: "fall", 12: "winter",
-};
 
 export interface LocationCoords {
   lat: number;
@@ -296,94 +290,6 @@ async function fetchTaxonDetails(
 }
 
 /**
- * Fetch observation histogram to determine seasonal presence.
- * Returns the seasons where a species has significant observations in the area.
- */
-async function fetchSeasonalData(
-  coords: LocationCoords,
-  taxonIds: number[]
-): Promise<Map<number, Season[]>> {
-  const result = new Map<number, Season[]>();
-  const bbox = buildBBox(coords);
-
-  // Batch in groups of 25 for faster parallel fetching
-  const batchSize = 25;
-  const promises: Promise<void>[] = [];
-
-  for (let i = 0; i < taxonIds.length; i += batchSize) {
-    const batch = taxonIds.slice(i, i + batchSize);
-    // Fetch histogram for each taxon in this batch
-    for (const taxonId of batch) {
-      const p = (async () => {
-        try {
-          const params = new URLSearchParams({
-            taxon_id: taxonId.toString(),
-            swlat: bbox.swlat.toString(),
-            swlng: bbox.swlng.toString(),
-            nelat: bbox.nelat.toString(),
-            nelng: bbox.nelng.toString(),
-            quality_grade: "research",
-            interval: "month_of_year",
-          });
-          const res = await fetch(
-            `${INAT_API}/observations/histogram?${params}`,
-            { headers: { "User-Agent": "NaturalistNurturer/1.0" } }
-          );
-          if (!res.ok) return;
-          const data = await res.json();
-          const monthData = data.results?.month_of_year;
-          if (!monthData) return;
-
-          // Determine which seasons have significant observations
-          // Sum observations by season
-          const seasonCounts: Record<Season, number> = {
-            spring: 0, summer: 0, fall: 0, winter: 0,
-          };
-          for (const [month, count] of Object.entries(monthData)) {
-            const m = parseInt(month);
-            const season = MONTH_TO_SEASON[m];
-            if (season) seasonCounts[season] += count as number;
-          }
-
-          // Total observations
-          const total = Object.values(seasonCounts).reduce((a, b) => a + b, 0);
-          if (total === 0) return;
-
-          // A season is "active" if it has at least 10% of total observations
-          const threshold = total * 0.1;
-          const seasons: Season[] = [];
-          for (const [season, count] of Object.entries(seasonCounts)) {
-            if (count >= threshold) {
-              seasons.push(season as Season);
-            }
-          }
-
-          if (seasons.length > 0) {
-            result.set(taxonId, seasons);
-          }
-        } catch {
-          // Skip this taxon
-        }
-      })();
-      promises.push(p);
-    }
-
-    // Wait for batch before starting next to be respectful of rate limits
-    if (promises.length >= batchSize) {
-      await Promise.all(promises);
-      promises.length = 0;
-    }
-  }
-
-  // Wait for remaining
-  if (promises.length > 0) {
-    await Promise.all(promises);
-  }
-
-  return result;
-}
-
-/**
  * Fetch bird sounds from Xeno-canto API.
  * Returns a map of scientific name -> sounds array.
  */
@@ -574,27 +480,15 @@ export async function fetchSpeciesForLocation(
     .map((r) => (r.taxon as { id?: number }).id)
     .filter((id): id is number => id !== undefined);
 
-  // Select top species per taxa group for seasonal histograms (cap ~25 total)
-  const histogramBudget = 25;
-  const perGroupBudget = Math.max(5, Math.floor(histogramBudget / taxaResults.length));
-  const histogramIds = taxaResults.flatMap((t) =>
-    t.results
-      .slice(0, perGroupBudget)
-      .map((r) => (r.taxon as { id?: number }).id)
-      .filter((id): id is number => id !== undefined)
-  );
+  // Fetch taxonomy details only — seasonal data and bird sounds are deferred
+  // to avoid blocking the home page with dozens of extra API calls
+  const taxonomyMap = await fetchTaxonDetails(taxonIds);
 
-  // Fetch taxonomy details and seasonal data in parallel
-  // Bird sounds are deferred to the study page where they're actually needed
-  const [taxonomyMap, seasonMap] = await Promise.all([
-    fetchTaxonDetails(taxonIds),
-    fetchSeasonalData(coords, histogramIds),
-  ]);
-
-  // Convert each taxa group to Species format
+  // Convert each taxa group to Species format (no seasonal data — defaults to all seasons)
+  const emptySeasonMap = new Map<number, Season[]>();
   const allSpecies: Species[] = [];
   for (const group of taxaResults) {
-    const species = convertToSpecies(group.results, group.iconicTaxa, taxonomyMap, seasonMap);
+    const species = convertToSpecies(group.results, group.iconicTaxa, taxonomyMap, emptySeasonMap);
     allSpecies.push(...species);
   }
 
