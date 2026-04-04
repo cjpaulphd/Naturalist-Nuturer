@@ -163,9 +163,6 @@ export function getNewCards(
       if (categories.length > 0 && !categories.includes(s.category)) {
         return false;
       }
-      if (s.photos.length === 0) {
-        return false;
-      }
       const state = states[String(s.id)];
       return !state || state.repetitions === 0;
     })
@@ -189,9 +186,7 @@ export function getQuizCards(
   count: number
 ): number[] {
   const filtered = allSpecies.filter(
-    (s) =>
-      (categories.length === 0 || categories.includes(s.category)) &&
-      s.photos.length > 0
+    (s) => categories.length === 0 || categories.includes(s.category)
   );
 
   // Prioritize native species: pick from natives first, then fill with non-natives
