@@ -381,14 +381,15 @@ export async function fetchBirdSounds(
   birdNames: { id: number; scientificName: string }[]
 ): Promise<Map<number, SpeciesSound[]>> {
   const result = new Map<number, SpeciesSound[]>();
-  const XENO_CANTO_API = "https://xeno-canto.org/api/2/recordings";
+
+  // Use local API proxy to avoid CORS/403 from Xeno-canto
+  const SOUNDS_API = "/api/sounds";
 
   // Fetch in small batches to respect rate limits
   for (const bird of birdNames.slice(0, 30)) {
     try {
       const res = await fetch(
-        `${XENO_CANTO_API}?query=${encodeURIComponent(bird.scientificName)}+q:A&page=1`,
-        { headers: { "User-Agent": "NaturalistNurturer/1.0" } }
+        `${SOUNDS_API}?query=${encodeURIComponent(bird.scientificName + " q:A")}`
       );
       if (!res.ok) continue;
       const data = await res.json();

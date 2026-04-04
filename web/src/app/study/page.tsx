@@ -397,7 +397,12 @@ function StudyContent() {
 
   if (!currentSpecies) return null;
 
-  const activeMode = studyMode === "mixed" ? currentMode : studyMode;
+  // Fall back to photo mode if sound mode but species has no sounds
+  const rawMode = studyMode === "mixed" ? currentMode : studyMode;
+  const activeMode =
+    rawMode === "sound" && (!currentSpecies.sounds || currentSpecies.sounds.length === 0)
+      ? "photo"
+      : rawMode;
   const progress = ((currentIndex + 1) / cardIds.length) * 100;
   const isHardMode = quizMode !== "flashcard";
 
@@ -707,13 +712,12 @@ function StudyContent() {
                   </p>
                 )}
 
-                {currentSpecies.sounds.length > 0 &&
-                  activeMode !== "sound" && (
-                    <SoundPlayer
-                      speciesId={currentSpecies.id}
-                      sounds={currentSpecies.sounds}
-                    />
-                  )}
+                {currentSpecies.sounds.length > 0 && (
+                  <SoundPlayer
+                    speciesId={currentSpecies.id}
+                    sounds={currentSpecies.sounds}
+                  />
+                )}
               </div>
 
               {/* Rating buttons */}
