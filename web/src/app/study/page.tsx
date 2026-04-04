@@ -176,7 +176,11 @@ function StudyContent() {
   const pickRandomMode = useCallback(
     (species: Species[], speciesId: number): StudyMode => {
       const sp = getSpeciesById(species, speciesId);
-      const modes: StudyMode[] = ["photo", "name"];
+      const modes: StudyMode[] = ["name"];
+      // Photo mode only if species has photos
+      if (sp?.photos && sp.photos.length > 0) {
+        modes.push("photo");
+      }
       // Sound mode only for birds with sounds
       if (sp?.category === "bird" && sp?.sounds && sp.sounds.length > 0) {
         modes.push("sound");
@@ -190,6 +194,18 @@ function StudyContent() {
     cardIds.length > 0
       ? getSpeciesById(allSpecies, cardIds[currentIndex])
       : undefined;
+
+  // Auto-skip cards that require a photo but have none
+  const activeModePrelim = studyMode === "mixed" ? currentMode : studyMode;
+  useEffect(() => {
+    if (
+      currentSpecies &&
+      activeModePrelim === "photo" &&
+      currentSpecies.photos.length === 0
+    ) {
+      advanceToNext();
+    }
+  }, [currentSpecies, activeModePrelim, advanceToNext]);
 
   // Generate choices for current card - same category only
   const choices = useMemo(() => {
