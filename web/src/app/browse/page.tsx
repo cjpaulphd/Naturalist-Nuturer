@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Species, Category } from "@/lib/types";
 import { CATEGORY_ICONS } from "@/lib/categories";
@@ -98,16 +98,74 @@ function BrowseContent() {
     );
   }
 
+  // Swipe state for species detail navigation
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchDeltaX, setTouchDeltaX] = useState(0);
+  const SWIPE_THRESHOLD = 80;
+
+  const selectedIndex = useMemo(() => {
+    if (!selectedSpecies) return -1;
+    return filteredSpecies.findIndex((s) => s.id === selectedSpecies.id);
+  }, [selectedSpecies, filteredSpecies]);
+
+  const goToNextSpecies = useCallback(() => {
+    if (selectedIndex >= 0 && selectedIndex < filteredSpecies.length - 1) {
+      setSelectedSpecies(filteredSpecies[selectedIndex + 1]);
+      window.scrollTo(0, 0);
+    }
+  }, [selectedIndex, filteredSpecies]);
+
+  const handleDetailTouchStart = useCallback((e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setTouchDeltaX(0);
+  }, []);
+
+  const handleDetailTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const delta = e.touches[0].clientX - touchStartX;
+    // Only track leftward swipes
+    if (delta < 0) {
+      setTouchDeltaX(delta);
+    }
+  }, [touchStartX]);
+
+  const handleDetailTouchEnd = useCallback(() => {
+    if (touchStartX === null) return;
+    if (touchDeltaX < -SWIPE_THRESHOLD) {
+      goToNextSpecies();
+    }
+    setTouchStartX(null);
+    setTouchDeltaX(0);
+  }, [touchStartX, touchDeltaX, goToNextSpecies]);
+
+  const hasNextSpecies = selectedIndex >= 0 && selectedIndex < filteredSpecies.length - 1;
+
   // Species detail view
   if (selectedSpecies) {
     return (
       <div className="max-w-lg mx-auto px-4 py-4">
         <ScrollToTop />
-        <SpeciesDetail
-          species={selectedSpecies}
-          allSpecies={allSpecies}
-          onClose={() => setSelectedSpecies(null)}
-        />
+        <div
+          onTouchStart={handleDetailTouchStart}
+          onTouchMove={handleDetailTouchMove}
+          onTouchEnd={handleDetailTouchEnd}
+          style={{
+            transform: touchDeltaX < 0 && hasNextSpecies ? `translateX(${touchDeltaX}px)` : undefined,
+            opacity: touchDeltaX < -SWIPE_THRESHOLD && hasNextSpecies ? 0.6 : 1,
+            transition: touchStartX !== null ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
+          }}
+        >
+          <SpeciesDetail
+            species={selectedSpecies}
+            allSpecies={allSpecies}
+            onClose={() => setSelectedSpecies(null)}
+          />
+        </div>
+        {hasNextSpecies && (
+          <p className="text-[10px] text-stone-300 text-center mt-2">
+            Swipe left for next species
+          </p>
+        )}
       </div>
     );
   }
