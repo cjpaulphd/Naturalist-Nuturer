@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Species, Category, SessionType, StudyMode, QuizMode, NameDisplay } from "@/lib/types";
 import { loadSpeciesData } from "@/lib/species";
 import { getCachedLocationSpecies } from "@/lib/inat";
 import { getNewCards } from "@/lib/srs";
+import { CATEGORIES } from "@/lib/categories";
 import CategorySelector from "@/components/CategorySelector";
 import LocationPicker from "@/components/LocationPicker";
 import QuizSettingsModal from "@/components/QuizSettingsModal";
@@ -55,6 +56,16 @@ export default function HomePage() {
 
   const newAvailable =
     species.length > 0 ? getNewCards(species, categories, 1).length > 0 : false;
+
+  // Compute per-category new (unlearned) species counts
+  const newCountsByCategory = useMemo(() => {
+    if (species.length === 0) return undefined;
+    const counts = {} as Record<Category, number>;
+    for (const cat of CATEGORIES) {
+      counts[cat.value] = getNewCards(species, [cat.value], Infinity).length;
+    }
+    return counts;
+  }, [species]);
 
   const hasBirds = species.some((s) => s.category === "bird");
 
@@ -143,6 +154,15 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Disabled Learn explanation */}
+      {species.length > 0 && !newAvailable && (
+        <p className="text-xs text-stone-400 text-center -mt-3">
+          {categories.length > 0
+            ? `No new species to learn for the selected ${categories.length === 1 ? "category" : "categories"}. Try selecting others or tap All.`
+            : "You\u2019ve learned all available species! Change location to discover more."}
+        </p>
+      )}
+
       {/* Location Picker */}
       <LocationPicker
         onSpeciesLoaded={handleSpeciesLoaded}
@@ -182,7 +202,11 @@ export default function HomePage() {
             <h3 className="text-sm font-semibold text-stone-600 mb-2">
               Categories
             </h3>
-            <CategorySelector selected={categories} onChange={setCategories} />
+            <CategorySelector
+              selected={categories}
+              onChange={setCategories}
+              newCounts={newCountsByCategory}
+            />
           </div>
         </>
       ) : null}
