@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/", label: "Learn" },
   { href: "/browse", label: "Browse" },
-  { href: "/progress", label: "Growth" },
+  { href: "/progress", label: "Grow" },
 ];
 
 export default function Header() {
