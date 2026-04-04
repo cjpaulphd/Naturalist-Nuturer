@@ -138,7 +138,7 @@ export default function HomePage() {
             onClick={() => setShowQuizSettings(true)}
             className="p-3 bg-blue-600 text-white rounded-xl text-center hover:bg-blue-700 transition-colors"
           >
-            <div className="font-semibold text-sm">Quiz</div>
+            <div className="font-semibold text-sm">Challenge</div>
           </button>
         </div>
       )}
