@@ -46,3 +46,8 @@ body {
 html, body {
   overscroll-behavior-y: none;
 }
+
+/* Prevent pinch-zoom and double-tap zoom */
+html {
+  touch-action: manipulation;
+}
