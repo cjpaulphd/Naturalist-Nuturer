@@ -449,7 +449,7 @@ function StudyContent() {
             Meet More
           </button>
           <button
-            onClick={() => router.push("/growth")}
+            onClick={() => router.push("/progress")}
             className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
           >
             Growth
