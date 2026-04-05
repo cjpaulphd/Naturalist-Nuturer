@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Species, Category, SessionType, StudyMode, QuizMode, NameDisplay } from "@/lib/types";
+import { Species, Category, SessionType, StudyMode, QuizMode, QuizDifficulty, NameDisplay } from "@/lib/types";
 import { loadSpeciesData } from "@/lib/species";
 import { getCachedLocationSpecies, getLastLocation } from "@/lib/inat";
 import { getNewCards, getDueCards, getAllLearnedCards } from "@/lib/srs";
@@ -112,7 +112,7 @@ export default function HomePage() {
     router.push(`/study?${params.toString()}`);
   };
 
-  const startQuiz = (quizMode: QuizMode, nameDisplay: NameDisplay, studyMode: StudyMode) => {
+  const startQuiz = (quizMode: QuizMode, nameDisplay: NameDisplay, studyMode: StudyMode, difficulty: QuizDifficulty) => {
     const params = new URLSearchParams();
     params.set("type", "quiz");
     params.set("mode", studyMode);
@@ -127,6 +127,9 @@ export default function HomePage() {
     }
     if (nameDisplay !== "both") {
       params.set("nameDisplay", nameDisplay);
+    }
+    if (difficulty !== "medium") {
+      params.set("difficulty", difficulty);
     }
     setShowQuizSettings(false);
     router.push(`/study?${params.toString()}`);

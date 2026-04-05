@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { QuizMode, NameDisplay, StudyMode } from "@/lib/types";
+import { QuizMode, QuizDifficulty, NameDisplay, StudyMode } from "@/lib/types";
 
 interface QuizSettingsModalProps {
   hasBirds: boolean;
-  onStart: (quizMode: QuizMode, nameDisplay: NameDisplay, studyMode: StudyMode) => void;
+  onStart: (quizMode: QuizMode, nameDisplay: NameDisplay, studyMode: StudyMode, difficulty: QuizDifficulty) => void;
   onClose: () => void;
 }
 
@@ -17,6 +17,7 @@ export default function QuizSettingsModal({
   const [quizMode, setQuizMode] = useState<QuizMode>("multiple-choice");
   const [nameDisplay, setNameDisplay] = useState<NameDisplay>("both");
   const [studyMode, setStudyMode] = useState<StudyMode>("photo");
+  const [difficulty, setDifficulty] = useState<QuizDifficulty>("medium");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
@@ -60,6 +61,40 @@ export default function QuizSettingsModal({
             ))}
           </div>
         </div>
+
+        {/* Similar Species Difficulty */}
+        {quizMode === "multiple-choice" && (
+          <div>
+            <h4 className="text-sm font-semibold text-stone-600 mb-2 text-center">Similar Species</h4>
+            <div className="flex justify-center">
+            <div className="inline-flex gap-1 bg-stone-100 p-1 rounded-lg">
+              {([
+                ["easy", "Easy", "Random choices"],
+                ["medium", "Medium", "Same order"],
+                ["hard", "Hard", "Look-alikes"],
+              ] as [QuizDifficulty, string, string][]).map(([level, label, desc]) => (
+                <button
+                  key={level}
+                  onClick={() => setDifficulty(level)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    difficulty === level
+                      ? "bg-green-700 text-white"
+                      : "text-stone-600 hover:bg-stone-200"
+                  }`}
+                  title={desc}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            </div>
+            <p className="text-xs text-stone-400 text-center mt-1">
+              {difficulty === "easy" && "Random species from category"}
+              {difficulty === "medium" && "Species from same taxonomic order"}
+              {difficulty === "hard" && "Closely related species (same family/genus)"}
+            </p>
+          </div>
+        )}
 
         {/* Name Display */}
         <div>
@@ -131,7 +166,7 @@ export default function QuizSettingsModal({
 
         {/* Start Challenge — at the bottom */}
         <button
-          onClick={() => onStart(quizMode, nameDisplay, studyMode)}
+          onClick={() => onStart(quizMode, nameDisplay, studyMode, difficulty)}
           className="w-full py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
         >
           Start Challenge
