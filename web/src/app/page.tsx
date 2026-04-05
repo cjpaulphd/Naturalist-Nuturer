@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Species, Category, SessionType, StudyMode, QuizMode, NameDisplay } from "@/lib/types";
 import { loadSpeciesData } from "@/lib/species";
-import { getCachedLocationSpecies } from "@/lib/inat";
+import { getCachedLocationSpecies, getLastLocation } from "@/lib/inat";
 import { getNewCards, getDueCards, getAllLearnedCards } from "@/lib/srs";
 import { CATEGORIES } from "@/lib/categories";
 import { getStorage, setStorage } from "@/lib/storage";
@@ -35,10 +35,13 @@ export default function HomePage() {
     const cached = getCachedLocationSpecies();
     if (cached && cached.length > 0) {
       setSpecies(cached);
+      const last = getLastLocation();
+      if (last?.name) setLocationName(last.name);
       setLoading(false);
     } else {
       loadSpeciesData().then((data) => {
         setSpecies(data);
+        setLocationName("Green River Preserve, NC");
         setLoading(false);
       });
     }
