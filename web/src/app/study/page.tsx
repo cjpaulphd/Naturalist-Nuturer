@@ -723,24 +723,12 @@ function StudyContent() {
       <div className="mb-3">
         {!flipped ? (
           (!isHardMode || activeMode === "name") && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowTips(!showTips)}
-                className={`px-4 py-3 font-medium transition-colors rounded-lg text-sm ${
-                  showTips
-                    ? "bg-amber-100 text-amber-800 border border-amber-300"
-                    : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
-                }`}
-              >
-                Tips
-              </button>
-              <button
-                onClick={handleFlip}
-                className="flex-1 py-3 bg-green-700 text-white font-medium hover:bg-green-800 transition-colors rounded-lg"
-              >
-                Reveal
-              </button>
-            </div>
+            <button
+              onClick={handleFlip}
+              className="w-full py-3 bg-green-700 text-white font-medium hover:bg-green-800 transition-colors rounded-lg"
+            >
+              Reveal
+            </button>
           )
         ) : (
           <div className="text-center">
@@ -819,6 +807,16 @@ function StudyContent() {
                         Choose your answer below
                       </p>
                     )}
+                    <button
+                      onClick={() => setShowTips(!showTips)}
+                      className={`mt-3 px-4 py-2 font-medium transition-colors rounded-lg text-sm ${
+                        showTips
+                          ? "bg-amber-100 text-amber-800 border border-amber-300"
+                          : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                      }`}
+                    >
+                      Tips
+                    </button>
                   </div>
                 </div>
               )}
@@ -839,6 +837,16 @@ function StudyContent() {
                   <div className="mt-6 text-sm text-stone-400 space-y-1">
                     <p>Picture its appearance, then reveal to check</p>
                   </div>
+                  <button
+                    onClick={() => setShowTips(!showTips)}
+                    className={`mt-4 px-4 py-2 font-medium transition-colors rounded-lg text-sm ${
+                      showTips
+                        ? "bg-amber-100 text-amber-800 border border-amber-300"
+                        : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                    }`}
+                  >
+                    Tips
+                  </button>
                 </div>
               )}
 
@@ -872,6 +880,16 @@ function StudyContent() {
                       Choose your answer below
                     </p>
                   )}
+                  <button
+                    onClick={() => setShowTips(!showTips)}
+                    className={`mt-4 px-4 py-2 font-medium transition-colors rounded-lg text-sm ${
+                      showTips
+                        ? "bg-amber-100 text-amber-800 border border-amber-300"
+                        : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                    }`}
+                  >
+                    Tips
+                  </button>
                 </div>
               )}
 
