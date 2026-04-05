@@ -418,7 +418,7 @@ function StudyContent() {
         {animationsEnabled && <FallingLeaves />}
         <p className="text-4xl mb-4">🌿 🎉 🌿</p>
         <h2 className="text-xl font-bold text-stone-800 mb-4">
-          Session Complete!
+          Nicely Nurtured!
         </h2>
 
         {/* Category progress report — highlights groups from this session */}
