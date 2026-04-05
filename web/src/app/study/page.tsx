@@ -807,7 +807,11 @@ function StudyContent() {
                     photos={currentSpecies.photos}
                   />
                   <div className="p-4 text-center">
-                    <p className="text-lg font-semibold text-stone-700">
+                    <p
+                      className={`text-lg font-semibold text-stone-700${!isHardMode ? " cursor-pointer hover:text-green-700 transition-colors" : ""}`}
+                      onClick={!isHardMode ? handleFlip : undefined}
+                      role={!isHardMode ? "button" : undefined}
+                    >
                       Who is this?
                     </p>
                     {isHardMode && (
@@ -841,7 +845,11 @@ function StudyContent() {
               {activeMode === "sound" && (
                 <div className="p-6 min-h-[300px] flex flex-col items-center justify-center text-center">
                   <p className="text-4xl mb-4">🔊</p>
-                  <p className="text-lg font-semibold text-stone-700 mb-4">
+                  <p
+                    className={`text-lg font-semibold text-stone-700 mb-4${!isHardMode ? " cursor-pointer hover:text-green-700 transition-colors" : ""}`}
+                    onClick={!isHardMode ? handleFlip : undefined}
+                    role={!isHardMode ? "button" : undefined}
+                  >
                     Who is this?
                   </p>
                   {loadingSounds ? (
