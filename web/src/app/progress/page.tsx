@@ -145,7 +145,7 @@ export default function ProgressPage() {
           </a>
         </p>
         <p className="text-xs text-stone-400">
-          For{" "}
+          Made for{" "}
           <a
             href="https://www.greenriverpreserve.org"
             target="_blank"
@@ -154,6 +154,8 @@ export default function ProgressPage() {
           >
             Green River Preserve
           </a>
+          , a 3,400 acre nature camp in the Blue Ridge Mountains of North
+          Carolina, and all who want to better know their neighbors.
         </p>
 
         {/* Data attribution */}
