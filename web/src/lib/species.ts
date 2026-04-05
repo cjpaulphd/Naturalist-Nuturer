@@ -41,6 +41,12 @@ export function sortAlphabetical(species: Species[]): Species[] {
   );
 }
 
+export function sortByScientificName(species: Species[]): Species[] {
+  return [...species].sort((a, b) =>
+    a.scientificName.localeCompare(b.scientificName)
+  );
+}
+
 export function sortByFamily(species: Species[]): Species[] {
   return [...species].sort(
     (a, b) =>

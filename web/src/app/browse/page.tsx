@@ -10,6 +10,7 @@ import {
   filterByCategory,
   sortByPrevalence,
   sortAlphabetical,
+  sortByScientificName,
   sortByFamily,
   getPhotoPath,
 } from "@/lib/species";
@@ -17,7 +18,7 @@ import { getCachedLocationSpecies, getLastLocation } from "@/lib/inat";
 import CategorySelector from "@/components/CategorySelector";
 import SpeciesDetail from "@/components/SpeciesDetail";
 
-type SortMode = "prevalence" | "alphabetical" | "family";
+type SortMode = "prevalence" | "alphabetical" | "scientificName" | "family";
 
 function ScrollToTop() {
   const didScroll = useRef(false);
@@ -83,6 +84,8 @@ function BrowseContent() {
     switch (sortMode) {
       case "alphabetical":
         return sortAlphabetical(result);
+      case "scientificName":
+        return sortByScientificName(result);
       case "family":
         return sortByFamily(result);
       default:
@@ -216,7 +219,8 @@ function BrowseContent() {
       <div className="flex gap-2 justify-center">
         {([
           ["prevalence", "By iNat Popularity"],
-          ["alphabetical", "A\u2013Z"],
+          ["alphabetical", "A\u2013Z Common"],
+          ["scientificName", "A\u2013Z Scientific"],
           ["family", "By Family"],
         ] as [SortMode, string][]).map(([mode, label]) => (
           <button
