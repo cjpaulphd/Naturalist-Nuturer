@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /home/user/Naturalist-Nurturer/web && npm install --prefer-offline --silent 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
