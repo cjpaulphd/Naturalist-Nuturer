@@ -19,6 +19,7 @@ export default function PhotoGallery({
   const [imgError, setImgError] = useState<Record<number, boolean>>({});
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef(0);
+  const isDragging = useRef(false);
   const SWIPE_THRESHOLD = 50;
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -41,15 +42,52 @@ export default function PhotoGallery({
       // Stop propagation to prevent card-level swipe from firing
       e.stopPropagation();
       if (delta < 0) {
-        // Swiped left → next photo
         setCurrentIndex((currentIndex + 1) % photos.length);
       } else {
-        // Swiped right → previous photo
         setCurrentIndex((currentIndex - 1 + photos.length) % photos.length);
       }
     }
     touchStartX.current = null;
     touchDeltaX.current = 0;
+  };
+
+  // Mouse drag handlers for desktop swipe support
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (photos.length <= 1) return;
+    isDragging.current = true;
+    touchStartX.current = e.clientX;
+    touchDeltaX.current = 0;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || touchStartX.current === null) return;
+    touchDeltaX.current = e.clientX - touchStartX.current;
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging.current || touchStartX.current === null) {
+      isDragging.current = false;
+      return;
+    }
+    const delta = touchDeltaX.current;
+    if (Math.abs(delta) > SWIPE_THRESHOLD) {
+      if (delta < 0) {
+        setCurrentIndex((currentIndex + 1) % photos.length);
+      } else {
+        setCurrentIndex((currentIndex - 1 + photos.length) % photos.length);
+      }
+    }
+    isDragging.current = false;
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging.current) {
+      isDragging.current = false;
+      touchStartX.current = null;
+      touchDeltaX.current = 0;
+    }
   };
 
   if (photos.length === 0) {
@@ -68,10 +106,15 @@ export default function PhotoGallery({
 
   return (
     <div
-      className="relative w-full"
+      className="relative w-full select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      style={{ cursor: photos.length > 1 ? "grab" : undefined }}
     >
       <div className="relative w-full aspect-[4/3] bg-stone-100 rounded-lg overflow-hidden">
         {imgError[currentIndex] ? (
@@ -84,6 +127,7 @@ export default function PhotoGallery({
             src={src}
             alt="Species photo"
             className="w-full h-full object-cover"
+            draggable={false}
             onError={() =>
               setImgError((prev) => ({ ...prev, [currentIndex]: true }))
             }
