@@ -118,7 +118,8 @@ export function getDueCards(
         return false;
       }
       const state = states[String(s.id)];
-      return state && state.repetitions > 0 && state.nextReview <= now;
+      // Include cards with repetitions===0 (rated "again"/"hard") that are due
+      return state && state.nextReview <= now;
     })
     .sort((a, b) => {
       const stateA = states[String(a.id)]!;
@@ -143,7 +144,8 @@ export function getAllLearnedCards(
         return false;
       }
       const state = states[String(s.id)];
-      return state && state.repetitions > 0;
+      // Any card that has been seen (has state) counts as "learned"
+      return !!state;
     })
     .sort((a, b) => {
       const stateA = states[String(a.id)]!;
@@ -169,7 +171,10 @@ export function getNewCards(
         return false;
       }
       const state = states[String(s.id)];
-      return !state || state.repetitions === 0;
+      // Only truly unseen cards (no state at all) are "new"
+      // Cards rated "again"/"hard" have state but repetitions===0;
+      // those belong in the review queue, not here.
+      return !state;
     })
     .sort((a, b) => {
       // Deprioritize confirmed introduced species; native and unknown are equal
@@ -214,7 +219,7 @@ export function getLearnedCount(
   return allSpecies.filter((s) => {
     if (category && s.category !== category) return false;
     const state = states[String(s.id)];
-    return state && state.repetitions > 0;
+    return !!state;
   }).length;
 }
 
