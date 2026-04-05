@@ -9,6 +9,16 @@ interface TaxonomyChartProps {
 
 const MAX_RELATED = 5;
 
+/** Build a Wikipedia URL for a taxon name */
+function wikiUrl(name: string): string {
+  return `https://en.wikipedia.org/wiki/${encodeURIComponent(name.replace(/ /g, "_"))}`;
+}
+
+/** Build an iNaturalist taxon URL from a species ID */
+function inatUrl(id: number): string {
+  return `https://www.inaturalist.org/taxa/${id}`;
+}
+
 export default function TaxonomyChart({ species, allSpecies }: TaxonomyChartProps) {
   // Don't render if no taxonomy data available
   if (!species.order && !species.family && !species.genus) return null;
@@ -63,6 +73,14 @@ export default function TaxonomyChart({ species, allSpecies }: TaxonomyChartProp
 
   if (levels.length === 0) return null;
 
+  // Wikipedia link for a taxonomy value; for Species rank, use the full scientific name
+  const linkForLevel = (level: { rank: string; value: string }) => {
+    if (level.rank === "Species") {
+      return wikiUrl(species.scientificName);
+    }
+    return wikiUrl(level.value);
+  };
+
   return (
     <div className="bg-stone-50 rounded-lg p-3 border border-stone-200">
       <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3 text-center">
@@ -88,16 +106,33 @@ export default function TaxonomyChart({ species, allSpecies }: TaxonomyChartProp
                 <span className="text-[10px] font-semibold uppercase text-stone-400 w-12">
                   {level.rank}
                 </span>
-                <span className={`text-sm font-medium ${level.rank === "Species" || level.rank === "Genus" ? "italic" : ""}`}>
+                <a
+                  href={linkForLevel(level)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-sm font-medium hover:underline ${level.rank === "Species" || level.rank === "Genus" ? "italic" : ""}`}
+                >
                   {level.value}
-                </span>
+                </a>
               </div>
               {/* Show common names of related species at this level (capped) */}
               {level.related.length > 0 && (
                 <div className="ml-12 mt-0.5">
                   <span className="text-[10px] text-stone-400">
                     Also:{" "}
-                    {level.related.slice(0, MAX_RELATED).map((s) => s.commonName).join(", ")}
+                    {level.related.slice(0, MAX_RELATED).map((s, idx) => (
+                      <span key={s.id}>
+                        {idx > 0 && ", "}
+                        <a
+                          href={inatUrl(s.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline hover:text-stone-600 transition-colors"
+                        >
+                          {s.commonName}
+                        </a>
+                      </span>
+                    ))}
                     {level.related.length > MAX_RELATED && (
                       <> +{level.related.length - MAX_RELATED} more</>
                     )}
@@ -118,9 +153,14 @@ export default function TaxonomyChart({ species, allSpecies }: TaxonomyChartProp
 
       {/* Full scientific name */}
       <div className="mt-2 pt-2 border-t border-stone-200 text-center">
-        <span className="text-xs italic text-stone-600">
+        <a
+          href={inatUrl(species.id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs italic text-stone-600 hover:underline hover:text-green-700 transition-colors"
+        >
           {species.scientificName}
-        </span>
+        </a>
         <span className="text-xs text-stone-400 ml-2">
           ({species.commonName})
         </span>
