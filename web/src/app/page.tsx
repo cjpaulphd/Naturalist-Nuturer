@@ -12,6 +12,7 @@ import CategorySelector from "@/components/CategorySelector";
 import LocationPicker from "@/components/LocationPicker";
 import QuizSettingsModal from "@/components/QuizSettingsModal";
 import WelcomePopup from "@/components/WelcomePopup";
+import InstallPrompt from "@/components/InstallPrompt";
 
 export default function HomePage() {
   const router = useRouter();
@@ -294,6 +295,9 @@ export default function HomePage() {
         >
           🍂 Celebrations {animations ? "On" : "Off"}
         </button>
+
+        {/* Add to Home Screen */}
+        <InstallPrompt />
 
         {/* Share Button */}
         <div className="flex justify-center">
