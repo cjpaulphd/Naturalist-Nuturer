@@ -1,4 +1,5 @@
 import { Species, Category, Season } from "./types";
+import { attachIndigenousNames } from "./indigenousNames";
 
 let speciesCache: Species[] | null = null;
 
@@ -9,6 +10,7 @@ export async function loadSpeciesData(): Promise<Species[]> {
     const res = await fetch("/data/species_data.json");
     if (!res.ok) throw new Error(`Failed to load species data: ${res.status}`);
     const data: Species[] = await res.json();
+    attachIndigenousNames(data);
     speciesCache = data;
     return data;
   } catch (err) {
@@ -64,7 +66,10 @@ export function searchSpecies(species: Species[], query: string): Species[] {
       s.scientificName.toLowerCase().includes(q) ||
       s.family.toLowerCase().includes(q) ||
       (s.order && s.order.toLowerCase().includes(q)) ||
-      (s.genus && s.genus.toLowerCase().includes(q))
+      (s.genus && s.genus.toLowerCase().includes(q)) ||
+      (s.indigenousNames && s.indigenousNames.some(
+        (n) => n.name.toLowerCase().includes(q) || n.language.toLowerCase().includes(q)
+      ))
   );
 }
 
