@@ -22,6 +22,16 @@ export default function SpeciesDetail({ species, allSpecies = [], onClose }: Spe
             <h2 className="text-xl font-bold text-stone-800">
               {species.commonName}
             </h2>
+            {species.indigenousNames && species.indigenousNames.length > 0 && (
+              <div className="flex flex-wrap gap-x-2">
+                {species.indigenousNames.map((n, i) => (
+                  <span key={i} className="text-sm font-medium text-amber-700" title={n.language}>
+                    {n.name}
+                    <span className="text-xs font-normal text-amber-500 ml-1">({n.language})</span>
+                  </span>
+                ))}
+              </div>
+            )}
             <p className="text-sm italic text-stone-500">
               {species.scientificName}
             </p>

@@ -6,6 +6,7 @@ import { Species, Season, Category, SpeciesPhoto, SpeciesSound } from "./types";
 import { getStorage, setStorage } from "./storage";
 import { CATEGORY_ORDER, CATEGORIES, ICONIC_TAXA_CONFIGS } from "./categories";
 import { loadSpeciesData } from "./species";
+import { getIndigenousNames } from "./indigenousNames";
 
 const INAT_API = "https://api.inaturalist.org/v1";
 const CACHE_KEY = "nn_location_species_v2";
@@ -519,6 +520,8 @@ function convertToSpecies(
     // Get seasonal data, default to all seasons if not available
     const seasons = seasonMap.get(taxonId) || ["spring", "summer", "fall", "winter"];
 
+    const indigenousNames = getIndigenousNames(scientificName);
+
     return {
       id: taxonId,
       category,
@@ -536,6 +539,7 @@ function convertToSpecies(
       keyFacts,
       habitat: "",
       identificationTips: "",
+      ...(indigenousNames.length > 0 ? { indigenousNames } : {}),
     };
   });
 }

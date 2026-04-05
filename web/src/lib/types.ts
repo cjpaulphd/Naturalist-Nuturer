@@ -23,6 +23,12 @@ export type QuizDifficulty = "easy" | "medium" | "hard";
 
 export type NameDisplay = "common" | "scientific" | "both";
 
+export interface IndigenousName {
+  name: string;
+  language: string;
+  languageCode?: string; // ISO 639 code, e.g. "mi" for Te Reo Māori
+}
+
 export interface Species {
   id: number;
   category: Category;
@@ -40,6 +46,7 @@ export interface Species {
   keyFacts: string[];
   habitat: string;
   identificationTips: string;
+  indigenousNames?: IndigenousName[];
 }
 
 // SRS (Spaced Repetition System) types

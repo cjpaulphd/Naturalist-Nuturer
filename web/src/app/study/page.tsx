@@ -300,11 +300,17 @@ function StudyContent() {
       const input = freeResponseInput.trim().toLowerCase();
       const commonName = currentSpecies.commonName.toLowerCase();
       const sciName = currentSpecies.scientificName.toLowerCase();
-      if (input === commonName || input === sciName) {
+      const indigenousMatch = currentSpecies.indigenousNames?.some(
+        (n) => n.name.toLowerCase() === input
+      );
+      if (input === commonName || input === sciName || indigenousMatch) {
         result = "correct";
       } else if (
         hasPartialWordMatch(input, currentSpecies.commonName) ||
-        hasPartialWordMatch(input, currentSpecies.scientificName)
+        hasPartialWordMatch(input, currentSpecies.scientificName) ||
+        (currentSpecies.indigenousNames?.some(
+          (n) => hasPartialWordMatch(input, n.name)
+        ))
       ) {
         result = "partial";
       }
@@ -921,6 +927,17 @@ function StudyContent() {
                   <h3 className="text-xl font-bold text-stone-800">
                     {currentSpecies.commonName}
                   </h3>
+                  {currentSpecies.indigenousNames && currentSpecies.indigenousNames.length > 0 && (
+                    <p className="text-sm font-medium text-amber-700">
+                      {currentSpecies.indigenousNames.map((n, i) => (
+                        <span key={i}>
+                          {i > 0 && " · "}
+                          {n.name}
+                          <span className="text-xs font-normal text-amber-500 ml-1">({n.language})</span>
+                        </span>
+                      ))}
+                    </p>
+                  )}
                   <p className="text-sm italic text-stone-500">
                     {currentSpecies.scientificName}
                   </p>

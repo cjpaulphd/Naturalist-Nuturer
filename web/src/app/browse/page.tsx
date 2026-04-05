@@ -304,6 +304,11 @@ function SpeciesListItem({
       <div className="flex-1 min-w-0">
         <div className="font-medium text-stone-800 text-sm truncate">
           {species.commonName}
+          {species.indigenousNames && species.indigenousNames.length > 0 && (
+            <span className="text-amber-700 font-normal ml-1">
+              ({species.indigenousNames[0].name})
+            </span>
+          )}
         </div>
         <div className="text-xs text-stone-500 italic truncate">
           {species.scientificName}
