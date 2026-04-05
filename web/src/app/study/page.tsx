@@ -19,7 +19,9 @@ import {
   getAllLearnedCards,
   getQuizCards,
   rateCard,
+  getLearnedCount,
 } from "@/lib/srs";
+import { CATEGORIES } from "@/lib/categories";
 import PhotoGallery from "@/components/PhotoGallery";
 import SoundPlayer from "@/components/SoundPlayer";
 import TaxonomyChart from "@/components/TaxonomyChart";
@@ -414,67 +416,61 @@ function StudyContent() {
     return (
       <div className="max-w-lg mx-auto px-4 py-12 text-center">
         {animationsEnabled && <FallingLeaves />}
-        <p className="text-4xl mb-4">🎉</p>
+        <p className="text-4xl mb-4">🌿 🎉 🌿</p>
         <h2 className="text-xl font-bold text-stone-800 mb-4">
           Session Complete!
         </h2>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-200 mb-6">
-          <div className="grid grid-cols-2 gap-3 text-sm text-center">
-            <div>
-              <span className="text-stone-500">Cards studied:</span>
-              <span className="ml-2 font-semibold">{sessionStats.total}</span>
+        {/* Category progress report — highlights groups from this session */}
+        {(() => {
+          const studiedCategories = new Set(
+            cardIds
+              .map((id) => getSpeciesById(allSpecies, id))
+              .filter(Boolean)
+              .map((s) => s!.category)
+          );
+          return (
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-stone-200 mb-6">
+              <h3 className="text-sm font-semibold text-stone-700 mb-3">
+                Neighbors You Know
+              </h3>
+              <div className="grid grid-cols-4 gap-3 mb-3">
+                {CATEGORIES.map((cat) => {
+                  const total = allSpecies.filter((s) => s.category === cat.value).length;
+                  if (total === 0) return null;
+                  const learned = getLearnedCount(allSpecies, cat.value);
+                  const pct = Math.round((learned / total) * 100);
+                  const highlighted = studiedCategories.has(cat.value);
+                  return (
+                    <div
+                      key={cat.value}
+                      className={`text-center rounded-lg p-1.5 transition-colors ${
+                        highlighted
+                          ? "ring-2 ring-green-500 bg-green-50"
+                          : "opacity-60"
+                      }`}
+                    >
+                      <div className="text-lg mb-0.5">{cat.icon}</div>
+                      <div className="text-[10px] text-stone-500 mb-1">{cat.label}</div>
+                      <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-green-600 rounded-full transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-stone-600 mt-0.5">
+                        {learned}/{total}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-stone-500 text-center">
+                {sessionStats.total} card{sessionStats.total !== 1 ? "s" : ""} studied this session
+              </div>
             </div>
-            {showQuizStats ? (
-              <>
-                <div>
-                  <span className="text-green-600">Correct:</span>
-                  <span className="ml-2 font-semibold">{sessionStats.correct}</span>
-                </div>
-                {sessionStats.partial > 0 && (
-                  <div>
-                    <span className="text-yellow-600">Partial:</span>
-                    <span className="ml-2 font-semibold">{sessionStats.partial}</span>
-                  </div>
-                )}
-                <div>
-                  <span className="text-red-500">Incorrect:</span>
-                  <span className="ml-2 font-semibold">{sessionStats.incorrect}</span>
-                </div>
-                <div>
-                  <span className="text-stone-500">Score:</span>
-                  <span className="ml-2 font-semibold">
-                    {sessionStats.total > 0
-                      ? Math.round(
-                          ((sessionStats.correct + sessionStats.partial * 0.5) / sessionStats.total) * 100
-                        )
-                      : 0}
-                    %
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <span className="text-green-600">Easy:</span>
-                  <span className="ml-2 font-semibold">{sessionStats.easy}</span>
-                </div>
-                <div>
-                  <span className="text-green-600">Good:</span>
-                  <span className="ml-2 font-semibold">{sessionStats.good}</span>
-                </div>
-                <div>
-                  <span className="text-orange-500">Hard:</span>
-                  <span className="ml-2 font-semibold">{sessionStats.hard}</span>
-                </div>
-                <div>
-                  <span className="text-red-500">Again:</span>
-                  <span className="ml-2 font-semibold">{sessionStats.again}</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+          );
+        })()}
 
         <div className="flex gap-3 justify-center flex-wrap">
           <button
