@@ -8,6 +8,7 @@ import {
   SessionType,
   StudyMode,
   QuizMode,
+  QuizDifficulty,
   NameDisplay,
   Rating,
 } from "@/lib/types";
@@ -49,19 +50,69 @@ function formatNameSecondary(species: Species, display: NameDisplay): string | n
   return null;
 }
 
-// Generate multiple-choice options: correct answer + 3 distractors from SAME category only
+// Generate multiple-choice options with taxonomy-aware distractor selection
 function generateChoices(
   correctSpecies: Species,
   allSpecies: Species[],
+  difficulty: QuizDifficulty = "medium",
   count: number = 4
 ): Species[] {
+  const needed = count - 1;
   const sameCategory = allSpecies.filter(
     (s) => s.category === correctSpecies.category && s.id !== correctSpecies.id
   );
-  const shuffled = [...sameCategory].sort(() => Math.random() - 0.5);
-  const distractors = shuffled.slice(0, count - 1);
-  const choices = [correctSpecies, ...distractors].sort(() => Math.random() - 0.5);
-  return choices;
+
+  if (difficulty === "easy") {
+    // Random from same category (original behavior)
+    const shuffled = [...sameCategory].sort(() => Math.random() - 0.5);
+    const distractors = shuffled.slice(0, needed);
+    return [correctSpecies, ...distractors].sort(() => Math.random() - 0.5);
+  }
+
+  // For medium/hard: prefer taxonomically similar species
+  const sameGenus = sameCategory.filter((s) => s.genus === correctSpecies.genus);
+  const sameFamily = sameCategory.filter(
+    (s) => s.family === correctSpecies.family && s.genus !== correctSpecies.genus
+  );
+  const sameOrder = sameCategory.filter(
+    (s) => s.order === correctSpecies.order && s.family !== correctSpecies.family
+  );
+  const rest = sameCategory.filter(
+    (s) => s.order !== correctSpecies.order
+  );
+
+  const shuffle = (arr: Species[]) => [...arr].sort(() => Math.random() - 0.5);
+
+  let pool: Species[];
+  if (difficulty === "hard") {
+    // Prioritize: same genus > same family > same order > rest
+    pool = [
+      ...shuffle(sameGenus),
+      ...shuffle(sameFamily),
+      ...shuffle(sameOrder),
+      ...shuffle(rest),
+    ];
+  } else {
+    // Medium: prioritize same order > same family > rest
+    pool = [
+      ...shuffle(sameOrder),
+      ...shuffle(sameFamily),
+      ...shuffle(sameGenus),
+      ...shuffle(rest),
+    ];
+  }
+
+  const distractors = pool.slice(0, needed);
+
+  // If we don't have enough, fill from the full category
+  if (distractors.length < needed) {
+    const usedIds = new Set([correctSpecies.id, ...distractors.map((d) => d.id)]);
+    const remaining = sameCategory.filter((s) => !usedIds.has(s.id));
+    const extra = shuffle(remaining).slice(0, needed - distractors.length);
+    distractors.push(...extra);
+  }
+
+  return [correctSpecies, ...distractors].sort(() => Math.random() - 0.5);
 }
 
 function StudyContent() {
@@ -75,6 +126,7 @@ function StudyContent() {
     ? "photo"
     : searchParams.get("mode") || "mixed") as StudyMode;
   const quizMode = (searchParams.get("quizMode") || "flashcard") as QuizMode;
+  const difficulty = (searchParams.get("difficulty") || "medium") as QuizDifficulty;
   const nameDisplay = (searchParams.get("nameDisplay") || "both") as NameDisplay;
   const categoryParam = searchParams.get("categories");
   const categories: Category[] = categoryParam
@@ -203,11 +255,11 @@ function StudyContent() {
       });
   }, [currentSpecies]);
 
-  // Generate choices for current card - same category only
+  // Generate choices for current card with taxonomy-aware difficulty
   const choices = useMemo(() => {
     if (!currentSpecies || quizMode === "flashcard") return [];
-    return generateChoices(currentSpecies, allSpecies);
-  }, [currentSpecies, allSpecies, quizMode]);
+    return generateChoices(currentSpecies, allSpecies, difficulty);
+  }, [currentSpecies, allSpecies, quizMode, difficulty]);
 
   // Dropdown options - same category only, sorted
   const dropdownOptions = useMemo(() => {
