@@ -6,7 +6,7 @@
  * for additional languages and regions are welcome.
  *
  * Sources:
- *   - Te Reo Māori bird names: NZ Department of Conservation, Te Ara Encyclopedia
+ *   - Te Reo Māori names: NZ Department of Conservation, Te Ara Encyclopedia
  *   - Hawaiian names: Bishop Museum, DLNR
  *   - Aboriginal Australian names: Various published sources
  */
@@ -117,6 +117,100 @@ const INDIGENOUS_NAMES: Record<string, IndigenousName[]> = {
   "anthus novaeseelandiae": [{ name: "Pīhoihoi", language: "Te Reo Māori", languageCode: "mi" }],
   "prosthemadera novaeseelandiae novaeseelandiae": [{ name: "Tūī", language: "Te Reo Māori", languageCode: "mi" }],
   "vanellus miles novaehollandiae": [{ name: "Ngūruru", language: "Te Reo Māori", languageCode: "mi" }],
+
+  // ── Aotearoa / New Zealand — Trees (Rākau) ─────────────────────────
+
+  "agathis australis": [{ name: "Kauri", language: "Te Reo Māori", languageCode: "mi" }],
+  "dacrydium cupressinum": [{ name: "Rimu", language: "Te Reo Māori", languageCode: "mi" }],
+  "podocarpus totara": [{ name: "Tōtara", language: "Te Reo Māori", languageCode: "mi" }],
+  "dacrycarpus dacrydioides": [{ name: "Kahikatea", language: "Te Reo Māori", languageCode: "mi" }],
+  "prumnopitys taxifolia": [{ name: "Mataī", language: "Te Reo Māori", languageCode: "mi" }],
+  "prumnopitys ferruginea": [{ name: "Miro", language: "Te Reo Māori", languageCode: "mi" }],
+  "phyllocladus trichomanoides": [{ name: "Tānekaha", language: "Te Reo Māori", languageCode: "mi" }],
+  "metrosideros excelsa": [{ name: "Pōhutukawa", language: "Te Reo Māori", languageCode: "mi" }],
+  "metrosideros robusta": [{ name: "Rātā", language: "Te Reo Māori", languageCode: "mi" }],
+  "metrosideros umbellata": [{ name: "Rātā", language: "Te Reo Māori", languageCode: "mi" }],
+  "vitex lucens": [{ name: "Pūriri", language: "Te Reo Māori", languageCode: "mi" }],
+  "beilschmiedia tawa": [{ name: "Tawa", language: "Te Reo Māori", languageCode: "mi" }],
+  "weinmannia racemosa": [{ name: "Kāmahi", language: "Te Reo Māori", languageCode: "mi" }],
+  "knightia excelsa": [{ name: "Rewarewa", language: "Te Reo Māori", languageCode: "mi" }],
+  "sophora microphylla": [{ name: "Kōwhai", language: "Te Reo Māori", languageCode: "mi" }],
+  "sophora tetraptera": [{ name: "Kōwhai", language: "Te Reo Māori", languageCode: "mi" }],
+  "hoheria populnea": [{ name: "Houhere", language: "Te Reo Māori", languageCode: "mi" }],
+  "alectryon excelsus": [{ name: "Tītoki", language: "Te Reo Māori", languageCode: "mi" }],
+  "nestegis cunninghamii": [{ name: "Maire", language: "Te Reo Māori", languageCode: "mi" }],
+  "rhopalostylis sapida": [{ name: "Nīkau", language: "Te Reo Māori", languageCode: "mi" }],
+  "cordyline australis": [{ name: "Tī Kōuka", language: "Te Reo Māori", languageCode: "mi" }],
+
+  // ── Aotearoa / New Zealand — Plants (Tipu) ────────────────────────
+
+  "leptospermum scoparium": [{ name: "Mānuka", language: "Te Reo Māori", languageCode: "mi" }],
+  "kunzea ericoides": [{ name: "Kānuka", language: "Te Reo Māori", languageCode: "mi" }],
+  "kunzea robusta": [{ name: "Kānuka", language: "Te Reo Māori", languageCode: "mi" }],
+  "phormium tenax": [{ name: "Harakeke", language: "Te Reo Māori", languageCode: "mi" }],
+  "phormium cookianum": [{ name: "Wharariki", language: "Te Reo Māori", languageCode: "mi" }],
+  "piper excelsum": [{ name: "Kawakawa", language: "Te Reo Māori", languageCode: "mi" }],
+  "cyathea dealbata": [{ name: "Ponga", language: "Te Reo Māori", languageCode: "mi" }],
+  "cyathea medullaris": [{ name: "Mamaku", language: "Te Reo Māori", languageCode: "mi" }],
+  "dicksonia squarrosa": [{ name: "Whekī", language: "Te Reo Māori", languageCode: "mi" }],
+  "asplenium bulbiferum": [{ name: "Pikopiko", language: "Te Reo Māori", languageCode: "mi" }],
+  "pteridium esculentum": [{ name: "Rarauhe", language: "Te Reo Māori", languageCode: "mi" }],
+  "typha orientalis": [{ name: "Raupō", language: "Te Reo Māori", languageCode: "mi" }],
+  "freycinetia banksii": [{ name: "Kiekie", language: "Te Reo Māori", languageCode: "mi" }],
+  "austroderia fulvida": [{ name: "Toetoe", language: "Te Reo Māori", languageCode: "mi" }],
+  "austroderia toetoe": [{ name: "Toetoe", language: "Te Reo Māori", languageCode: "mi" }],
+  "hebe salicifolia": [{ name: "Koromiko", language: "Te Reo Māori", languageCode: "mi" }],
+  "veronica salicifolia": [{ name: "Koromiko", language: "Te Reo Māori", languageCode: "mi" }],
+  "pomaderris kumeraho": [{ name: "Kumarahou", language: "Te Reo Māori", languageCode: "mi" }],
+  "coriaria arborea": [{ name: "Tutu", language: "Te Reo Māori", languageCode: "mi" }],
+  "coprosma robusta": [{ name: "Karamū", language: "Te Reo Māori", languageCode: "mi" }],
+  "pseudopanax crassifolius": [{ name: "Horoeka", language: "Te Reo Māori", languageCode: "mi" }],
+  "arthropodium cirratum": [{ name: "Rengarenga", language: "Te Reo Māori", languageCode: "mi" }],
+  "myoporum laetum": [{ name: "Ngaio", language: "Te Reo Māori", languageCode: "mi" }],
+
+  // ── Aotearoa / New Zealand — Insects (Pepeke) ─────────────────────
+
+  "deinacrida heteracantha": [{ name: "Wētāpunga", language: "Te Reo Māori", languageCode: "mi" }],
+  "deinacrida mahoenui": [{ name: "Wētāpunga", language: "Te Reo Māori", languageCode: "mi" }],
+  "hemideina thoracica": [{ name: "Wētā", language: "Te Reo Māori", languageCode: "mi" }],
+  "hemideina crassidens": [{ name: "Wētā", language: "Te Reo Māori", languageCode: "mi" }],
+  "hemideina femorata": [{ name: "Wētā", language: "Te Reo Māori", languageCode: "mi" }],
+  "gymnoplectron acanthocerum": [{ name: "Wētā", language: "Te Reo Māori", languageCode: "mi" }],
+  "prionoplus reticularis": [{ name: "Huhu", language: "Te Reo Māori", languageCode: "mi" }],
+  "aenetus virescens": [{ name: "Pepe Pūriri", language: "Te Reo Māori", languageCode: "mi" }],
+  "kikihia muta": [{ name: "Kihikihi", language: "Te Reo Māori", languageCode: "mi" }],
+  "kikihia scutellaris": [{ name: "Kihikihi", language: "Te Reo Māori", languageCode: "mi" }],
+  "zephyresthes phoebe": [{ name: "Pepe", language: "Te Reo Māori", languageCode: "mi" }],
+
+  // ── Aotearoa / New Zealand — Reptiles (Ngārara) ───────────────────
+
+  "sphenodon punctatus": [{ name: "Tuatara", language: "Te Reo Māori", languageCode: "mi" }],
+  "oligosoma grande": [{ name: "Moko", language: "Te Reo Māori", languageCode: "mi" }],
+  "oligosoma otagense": [{ name: "Moko", language: "Te Reo Māori", languageCode: "mi" }],
+  "naultinus elegans": [{ name: "Moko Kākāriki", language: "Te Reo Māori", languageCode: "mi" }],
+  "naultinus gemmeus": [{ name: "Moko Kākāriki", language: "Te Reo Māori", languageCode: "mi" }],
+  "mokopirirakau granulatus": [{ name: "Moko", language: "Te Reo Māori", languageCode: "mi" }],
+  "woodworthia maculata": [{ name: "Moko", language: "Te Reo Māori", languageCode: "mi" }],
+
+  // ── Aotearoa / New Zealand — Mammals (Kararehe) ───────────────────
+
+  "chalinolobus tuberculatus": [{ name: "Pekapeka-tou-roa", language: "Te Reo Māori", languageCode: "mi" }],
+  "mystacina tuberculata": [{ name: "Pekapeka-tou-poto", language: "Te Reo Māori", languageCode: "mi" }],
+  "arctocephalus forsteri": [{ name: "Kekeno", language: "Te Reo Māori", languageCode: "mi" }],
+  "phocarctos hookeri": [{ name: "Whakahao", language: "Te Reo Māori", languageCode: "mi" }],
+
+  // ── Aotearoa / New Zealand — Amphibians (Poroka) ──────────────────
+
+  "leiopelma hochstetteri": [{ name: "Pepetuna", language: "Te Reo Māori", languageCode: "mi" }],
+  "leiopelma archeyi": [{ name: "Pepetuna", language: "Te Reo Māori", languageCode: "mi" }],
+  "leiopelma hamiltoni": [{ name: "Pepetuna", language: "Te Reo Māori", languageCode: "mi" }],
+
+  // ── Aotearoa / New Zealand — Fungi (Harore) ───────────────────────
+
+  "auricularia cornea": [{ name: "Hakeke", language: "Te Reo Māori", languageCode: "mi" }],
+  "lycoperdon perlatum": [{ name: "Pukurau", language: "Te Reo Māori", languageCode: "mi" }],
+  "entoloma hochstetteri": [{ name: "Werewere-kōkako", language: "Te Reo Māori", languageCode: "mi" }],
+  "cordyceps robertsii": [{ name: "Āwheto", language: "Te Reo Māori", languageCode: "mi" }],
 
   // ── Hawaiʻi — ʻŌlelo Hawaiʻi ──────────────────────────────────────
 
