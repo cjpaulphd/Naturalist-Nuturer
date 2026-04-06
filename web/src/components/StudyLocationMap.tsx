@@ -174,7 +174,7 @@ export default function StudyLocationMap() {
             </p>
           </div>
           {locations.length > 1 && (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative z-[1001]" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 bg-stone-100 text-stone-700 rounded-lg text-xs font-medium hover:bg-stone-200 transition-colors"
