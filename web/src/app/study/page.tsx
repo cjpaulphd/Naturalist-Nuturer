@@ -455,17 +455,19 @@ function StudyContent() {
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (touchStartX === null) return;
     const delta = e.touches[0].clientX - touchStartX;
-    // Only track leftward swipes (negative delta) when card is flipped
-    if (flipped) {
-      setTouchDeltaX(delta);
-    }
+    setTouchDeltaX(delta);
   };
 
   const handleTouchEnd = () => {
     if (touchStartX === null) return;
-    if (flipped && touchDeltaX < -SWIPE_THRESHOLD) {
-      // Swiped left while viewing answer → advance with "good" rating
-      handleNext();
+    if (touchDeltaX < -SWIPE_THRESHOLD) {
+      if (flipped) {
+        // Swiped left while viewing answer → advance with "good" rating
+        handleNext();
+      } else if (!isHardMode || activeMode === "name") {
+        // Swiped left while viewing question → reveal answer
+        handleFlip();
+      }
     }
     setTouchStartX(null);
     setTouchDeltaX(0);
@@ -727,7 +729,12 @@ function StudyContent() {
               onClick={handleFlip}
               className="w-full py-3 bg-green-700 text-white font-medium hover:bg-green-800 transition-colors rounded-lg"
             >
-              Reveal
+              <span className="flex items-center justify-center gap-2">
+                Reveal
+                <svg className="w-4 h-4 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
             </button>
           )
         ) : (
@@ -778,8 +785,8 @@ function StudyContent() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          transform: touchDeltaX < 0 && flipped ? `translateX(${touchDeltaX}px)` : undefined,
-          opacity: touchDeltaX < -SWIPE_THRESHOLD && flipped ? 0.6 : 1,
+          transform: touchDeltaX < 0 ? `translateX(${touchDeltaX}px)` : undefined,
+          opacity: touchDeltaX < -SWIPE_THRESHOLD ? 0.6 : 1,
           transition: touchStartX !== null ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
         }}
       >
