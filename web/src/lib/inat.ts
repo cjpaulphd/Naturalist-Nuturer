@@ -40,7 +40,9 @@ const TREE_FAMILIES = new Set([
   "Symplocaceae", "Adoxaceae",
 ]);
 
-// Common-name keywords that strongly suggest a tree
+// Common-name keywords that strongly suggest a tree.
+// Matched using word boundaries to avoid false positives like
+// "bashful" matching "ash" or "helmet" matching "elm".
 const TREE_NAME_KEYWORDS = [
   "oak", "maple", "pine", "birch", "beech", "ash", "elm", "hickory",
   "walnut", "cherry", "poplar", "willow", "locust", "redbud", "dogwood",
@@ -50,6 +52,19 @@ const TREE_NAME_KEYWORDS = [
   "pawpaw", "catalpa", "hackberry", "hornbeam", "linden",
   "sumac", "smoketree", "fringe tree",
 ];
+
+// Pre-compiled regex patterns for word-boundary matching
+const TREE_NAME_PATTERNS = TREE_NAME_KEYWORDS.map(
+  (kw) => new RegExp(`\\b${kw}\\b`, "i")
+);
+
+/**
+ * Check if a common name contains a tree keyword as a whole word.
+ * Uses word boundaries to prevent "helmet" matching "elm", etc.
+ */
+function hasTreeKeyword(commonName: string): boolean {
+  return TREE_NAME_PATTERNS.some((pat) => pat.test(commonName));
+}
 
 
 export interface LocationCoords {
@@ -146,10 +161,9 @@ function classifyPlant(
   commonName: string
 ): Category {
   if (familyName && TREE_FAMILIES.has(familyName)) {
-    const ambiguousFamilies = new Set(["Rosaceae", "Fabaceae", "Ericaceae", "Salicaceae", "Adoxaceae", "Anacardiaceae", "Oleaceae", "Bignoniaceae"]);
+    const ambiguousFamilies = new Set(["Rosaceae", "Fabaceae", "Ericaceae", "Salicaceae", "Adoxaceae", "Anacardiaceae", "Oleaceae", "Bignoniaceae", "Aquifoliaceae"]);
     if (ambiguousFamilies.has(familyName)) {
-      const cn = commonName.toLowerCase();
-      if (TREE_NAME_KEYWORDS.some((kw) => cn.includes(kw))) {
+      if (hasTreeKeyword(commonName)) {
         return "tree";
       }
       return "plant";
@@ -157,8 +171,7 @@ function classifyPlant(
     return "tree";
   }
 
-  const cn = commonName.toLowerCase();
-  if (TREE_NAME_KEYWORDS.some((kw) => cn.includes(kw))) {
+  if (hasTreeKeyword(commonName)) {
     return "tree";
   }
 

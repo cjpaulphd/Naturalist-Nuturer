@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import time
 
 import requests
@@ -152,11 +153,12 @@ def is_tree(taxon):
         rank = taxon.get("rank", "species")
         # For families that contain both trees and non-trees, use rank_level
         # Trees typically have rank_level >= 10 (species level)
-        if taxon_family in {"Rosaceae", "Fabaceae", "Ericaceae", "Salicaceae", "Adoxaceae", "Anacardiaceae", "Oleaceae", "Bignoniaceae"}:
+        if taxon_family in {"Rosaceae", "Fabaceae", "Ericaceae", "Salicaceae", "Adoxaceae", "Anacardiaceae", "Oleaceae", "Bignoniaceae", "Aquifoliaceae"}:
             # These families have many non-tree members; check if common name
-            # suggests tree-like growth
+            # suggests tree-like growth using word-boundary matching to avoid
+            # false positives like "bashful" matching "ash" or "helmet" matching "elm"
             common = (taxon.get("preferred_common_name") or "").lower()
-            tree_words = {
+            tree_words = [
                 "tree", "oak", "maple", "pine", "birch", "beech", "ash",
                 "elm", "hickory", "walnut", "cherry", "poplar", "willow",
                 "locust", "redbud", "dogwood", "magnolia", "tulip",
@@ -166,8 +168,8 @@ def is_tree(taxon):
                 "silverbell", "pawpaw", "rhododendron", "mountain laurel",
                 "witch hazel", "catalpa", "paulownia",
                 "sumac", "smoketree", "fringe tree",
-            }
-            return any(w in common for w in tree_words)
+            ]
+            return any(re.search(rf"\b{w}\b", common) for w in tree_words)
         return True
 
     # Check ancestry IDs for tree orders
