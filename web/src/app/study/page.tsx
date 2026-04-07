@@ -465,6 +465,18 @@ function StudyContent() {
     advanceToNext();
   };
 
+  const handlePrevious = () => {
+    if (currentIndex <= 0) return;
+    const prevIndex = currentIndex - 1;
+    setCurrentIndex(prevIndex);
+    setFlipped(false);
+    setShowTips(false);
+    resetQuizState();
+    if (studyMode === "mixed") {
+      setCurrentMode(pickRandomMode(allSpecies, cardIds[prevIndex]));
+    }
+  };
+
   // Swipe gesture handlers
   const SWIPE_THRESHOLD = 80;
 
@@ -1107,24 +1119,54 @@ function StudyContent() {
               )}
 
               <div className="p-4 space-y-3 text-center">
-                <div>
-                  <h3 className="text-xl font-bold text-stone-800">
-                    {currentSpecies.commonName}
-                  </h3>
-                  {currentSpecies.indigenousNames && currentSpecies.indigenousNames.length > 0 && (
-                    <p className="text-sm font-medium text-amber-700">
-                      {currentSpecies.indigenousNames.map((n, i) => (
-                        <span key={i}>
-                          {i > 0 && " · "}
-                          {n.name}
-                          <span className="text-xs font-normal text-amber-500 ml-1">({n.language})</span>
-                        </span>
-                      ))}
+                <div className="flex items-center justify-center gap-3">
+                  {/* Previous chevron */}
+                  <button
+                    onClick={handlePrevious}
+                    disabled={currentIndex <= 0}
+                    className="flex-shrink-0 text-teal-500 hover:text-teal-700 disabled:opacity-20 disabled:cursor-default transition-colors"
+                    aria-label="Previous card"
+                  >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  <div className="min-w-0">
+                    <h3 className="text-xl font-bold text-stone-800">
+                      {currentSpecies.commonName}
+                    </h3>
+                    {currentSpecies.indigenousNames && currentSpecies.indigenousNames.length > 0 && (
+                      <p className="text-sm font-medium text-amber-700">
+                        {currentSpecies.indigenousNames.map((n, i) => (
+                          <span key={i}>
+                            {i > 0 && " · "}
+                            {n.name}
+                            <span className="text-xs font-normal text-amber-500 ml-1">({n.language})</span>
+                          </span>
+                        ))}
+                      </p>
+                    )}
+                    <p className="text-sm italic text-stone-500">
+                      {currentSpecies.scientificName}
                     </p>
-                  )}
-                  <p className="text-sm italic text-stone-500">
-                    {currentSpecies.scientificName}
-                  </p>
+                  </div>
+
+                  {/* Next chevron */}
+                  <button
+                    onClick={
+                      isHardMode && activeMode !== "name"
+                        ? () => handleRate(isCorrect === "correct" ? "good" : isCorrect === "partial" ? "hard" : "again")
+                        : handleNext
+                    }
+                    disabled={currentIndex >= cardIds.length - 1 && sessionComplete}
+                    className="flex-shrink-0 text-teal-500 hover:text-teal-700 disabled:opacity-20 disabled:cursor-default transition-colors"
+                    aria-label="Next card"
+                  >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
 
                 <div className="flex gap-2 flex-wrap justify-center">
