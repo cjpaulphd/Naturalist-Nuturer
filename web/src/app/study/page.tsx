@@ -1079,6 +1079,42 @@ function StudyContent() {
                 </div>
               )}
 
+              {/* Front-of-card chevron navigation */}
+              <div className="flex items-center justify-between px-6 py-3 border-t border-stone-100">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentIndex <= 0}
+                  className="text-teal-500 hover:text-teal-700 disabled:opacity-20 disabled:cursor-default transition-colors"
+                  aria-label="Previous card"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    if (isHardMode && activeMode !== "name" && !answerSubmitted) {
+                      // Reveal answer without submitting — count as incorrect
+                      setIsCorrect("incorrect");
+                      setAnswerSubmitted(true);
+                      setFlipped(true);
+                      setSessionStats((s) => ({
+                        ...s,
+                        incorrect: s.incorrect + 1,
+                      }));
+                    } else {
+                      handleFlip();
+                    }
+                  }}
+                  className="text-teal-500 hover:text-teal-700 transition-colors"
+                  aria-label="Reveal answer"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
             </div>
           </div>
 
