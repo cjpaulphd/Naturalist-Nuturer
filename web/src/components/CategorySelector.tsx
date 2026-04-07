@@ -44,6 +44,12 @@ export default function CategorySelector({
         }`}
       >
         All
+        {learnedCounts && totalCounts ? (
+          <span className="ml-1 text-xs opacity-75">
+            ({Object.values(learnedCounts).reduce((a, b) => a + b, 0)}/
+            {Object.values(totalCounts).reduce((a, b) => a + b, 0)})
+          </span>
+        ) : null}
       </button>
       {CATEGORIES.map((cat) => {
         const count = newCounts?.[cat.value];
