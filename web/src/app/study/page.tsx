@@ -744,7 +744,7 @@ function StudyContent() {
                             params.set("type", hasDue ? "review" : "review-all");
                           }
                         }
-                        router.push(`/study?${params.toString()}`);
+                        window.location.href = `/study?${params.toString()}`;
                       }}
                       className={`text-center rounded-lg p-1.5 transition-colors cursor-pointer hover:bg-green-100 active:scale-95 ${
                         highlighted
@@ -791,7 +791,7 @@ function StudyContent() {
                   params.set("type", "review-all");
                 }
                 params.set("fallback", "true");
-                router.push(`/study?${params.toString()}`);
+                window.location.href = `/study?${params.toString()}`;
               }
             }}
             className="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800"
